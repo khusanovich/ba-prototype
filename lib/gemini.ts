@@ -5,13 +5,19 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not set in environment variables");
-}
+const apiKey = process.env.GEMINI_API_KEY || "";
 
 export const genAI = new GoogleGenerativeAI(apiKey);
+
+/**
+ * Validate that Gemini is properly configured
+ * Call this at runtime before using the client
+ */
+export function validateGeminiConfig() {
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set in environment variables");
+  }
+}
 
 // System instruction in German for all chat interactions
 export const SYSTEM_INSTRUCTION = `Du bist ein Lernassistent. Antworte immer auf Deutsch. Stütze dich ausschließlich auf das bereitgestellte Lernmaterial des Studierenden. Wenn die Information nicht im Material steht, sage das ehrlich. Gib bei jeder Antwort an, auf welchen Teil des Materials du dich stützt.`;
