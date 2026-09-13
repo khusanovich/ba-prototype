@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import ChatPanel from "./components/ChatPanel";
+import AdaptiveContent from "./components/AdaptiveContent";
 
 interface DocumentInfo {
   id: string;
@@ -56,31 +57,9 @@ export default function WorkspacePage() {
             <ChatPanel documentId={docId} />
           </div>
 
-          {/* Content Panel - Will be used for Features A & C */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-900">
-                Zusammenfassung & Quiz
-              </h2>
-              <p className="text-gray-600 text-sm">
-                Feature A (Adaptive Content) wird hier angezeigt.
-              </p>
-              <p className="text-gray-500 text-xs mt-2">
-                Zusammenfassung und adaptive Quizfragen basierend auf deinen Schwachstellen.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-900">
-                Transparenz & Quellen
-              </h2>
-              <p className="text-gray-600 text-sm">
-                Feature C (Shown Reasoning) ist bereits im Chat integriert.
-              </p>
-              <p className="text-gray-500 text-xs mt-2">
-                Jede Chat-Antwort zeigt die Quellen (Seitenzahlen) an.
-              </p>
-            </div>
+          {/* Content Panel - Features A & C */}
+          <div className="h-[calc(100vh-200px)] overflow-y-auto">
+            <AdaptiveContent documentId={docId} />
           </div>
         </div>
       </div>
