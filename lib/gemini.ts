@@ -1,6 +1,6 @@
 /**
  * Gemini API client for LLM and embeddings
- * Models: gemini-1.5-flash (chat), text-embedding-004 (embeddings)
+ * Models: gemini-1.5-flash (chat), embedding-001 (embeddings)
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -23,66 +23,65 @@ export function validateGeminiConfig() {
 export const SYSTEM_INSTRUCTION = `Du bist ein Lernassistent. Antworte immer auf Deutsch. Stütze dich ausschließlich auf das bereitgestellte Lernmaterial des Studierenden. Wenn die Information nicht im Material steht, sage das ehrlich. Gib bei jeder Antwort an, auf welchen Teil des Materials du dich stützt.`;
 
 /**
- * Get the chat model (gemini-1.5-flash) with system instruction
+ * Get the chat model with system instruction
+ * Uses gemini-flash-latest (2025 available model)
  */
 export function getChatModel() {
   return genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-flash-latest",
     systemInstruction: SYSTEM_INSTRUCTION,
   });
 }
 
 /**
- * Get the embedding model (text-embedding-004)
+ * Simple hash-based embedding for prototyping
+ * Converts text to a deterministic 768-dim vector
+ * Note: This is NOT semantic - just for testing the pipeline
  */
-export function getEmbeddingModel() {
-  return genAI.getGenerativeModel({
-    model: "text-embedding-004",
-  });
+function simpleTextEmbedding(text: string): number[] {
+  const embedding = new Array(768).fill(0);
+
+  // Simple deterministic hash-based approach
+  for (let i = 0; i < text.length; i++) {
+    const charCode = text.charCodeAt(i);
+    const position = (charCode + i) % 768;
+    embedding[position] += charCode / 1000;
+  }
+
+  // Normalize
+  const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
+  return embedding.map(val => magnitude > 0 ? val / magnitude : 0);
 }
 
 /**
- * Generate embeddings for a text
- * Returns a 768-dimensional vector
+ * TEMPORARY: Generate simple embeddings
+ * TODO: Replace with proper embedding service when available
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const model = getEmbeddingModel();
-
-  try {
-    const result = await model.embedContent(text);
-    return result.embedding.values;
-  } catch (error) {
-    console.error("Embedding generation error:", error);
-    throw new Error(`Failed to generate embedding: ${error instanceof Error ? error.message : String(error)}`);
-  }
+  console.log("⚠️  Using simple text hashing (not semantic embeddings)");
+  return simpleTextEmbedding(text);
 }
 
 /**
- * Generate embeddings for multiple texts (batch)
- * More efficient for ingestion
+ * TEMPORARY: Generate embeddings in batch
+ * TODO: Replace with proper embedding service when available
  */
 export async function generateEmbeddingsBatch(
   texts: string[]
 ): Promise<number[][]> {
-  const model = getEmbeddingModel();
+  console.log(`⚠️  Generating ${texts.length} simple embeddings (not semantic)...`);
+  console.log("Note: This is a fallback for testing. Consider using a proper embedding API.");
+
   const embeddings: number[][] = [];
 
-  // Process in batches to avoid rate limits
-  const BATCH_SIZE = 10;
-  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-    const batch = texts.slice(i, i + BATCH_SIZE);
-    const batchPromises = batch.map(async (text) => {
-      const result = await model.embedContent(text);
-      return result.embedding.values;
-    });
-    const batchResults = await Promise.all(batchPromises);
-    embeddings.push(...batchResults);
+  for (let i = 0; i < texts.length; i++) {
+    embeddings.push(simpleTextEmbedding(texts[i]));
 
-    // Small delay between batches to avoid rate limits
-    if (i + BATCH_SIZE < texts.length) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    if ((i + 1) % 10 === 0 || i === texts.length - 1) {
+      console.log(`Progress: ${i + 1}/${texts.length}`);
     }
   }
 
+  console.log(`✓ Generated ${embeddings.length} embeddings`);
   return embeddings;
 }

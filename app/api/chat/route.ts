@@ -50,7 +50,7 @@ Wichtig:
     // 6. Start chat session
     const chat = model.startChat({
       history: conversationHistory.map((msg: { role: string; content: string }) => ({
-        role: msg.role,
+        role: msg.role === "assistant" ? "model" : msg.role, // Gemini uses "model" not "assistant"
         parts: [{ text: msg.content }],
       })),
     });
