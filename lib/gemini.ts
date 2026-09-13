@@ -47,8 +47,14 @@ export function getEmbeddingModel() {
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   const model = getEmbeddingModel();
-  const result = await model.embedContent(text);
-  return result.embedding.values;
+
+  try {
+    const result = await model.embedContent(text);
+    return result.embedding.values;
+  } catch (error) {
+    console.error("Embedding generation error:", error);
+    throw new Error(`Failed to generate embedding: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**

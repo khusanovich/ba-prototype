@@ -43,10 +43,20 @@ export default function WorkspacePage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-semibold text-gray-900">
-            {document?.title}
-          </h1>
-          <p className="text-sm text-gray-500">Lernassistent Workspace</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">
+                {document?.title}
+              </h1>
+              <p className="text-sm text-gray-500">Lernassistent Workspace</p>
+            </div>
+            <a
+              href="/"
+              className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors"
+            >
+              ← Neues Dokument hochladen
+            </a>
+          </div>
         </div>
       </header>
 

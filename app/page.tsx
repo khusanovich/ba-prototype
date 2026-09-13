@@ -8,6 +8,7 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -27,10 +28,13 @@ export default function Home() {
 
     setUploading(true);
     setError(null);
+    setUploadProgress("PDF wird hochgeladen...");
 
     try {
       const formData = new FormData();
       formData.append("file", file);
+
+      setUploadProgress("PDF wird verarbeitet...");
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -42,12 +46,18 @@ export default function Home() {
         throw new Error(data.error || "Upload fehlgeschlagen");
       }
 
+      setUploadProgress("Text wird extrahiert und analysiert...");
+
       const data = await response.json();
+
+      setUploadProgress("Fertig! Weiterleitung...");
+
       // Redirect to workspace
       router.push(`/workspace/${data.documentId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten");
       setUploading(false);
+      setUploadProgress("");
     }
   };
 
@@ -115,9 +125,12 @@ export default function Home() {
         </div>
 
         {uploading && (
-          <div className="mt-4 text-center text-sm text-gray-600">
-            <p>PDF wird verarbeitet...</p>
-            <p className="text-xs mt-1">Dies kann einen Moment dauern.</p>
+          <div className="mt-4 text-center">
+            <div className="flex justify-center mb-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+            <p className="text-sm text-gray-600 font-medium">{uploadProgress}</p>
+            <p className="text-xs text-gray-500 mt-1">Dies kann 30-60 Sekunden dauern.</p>
           </div>
         )}
       </div>
