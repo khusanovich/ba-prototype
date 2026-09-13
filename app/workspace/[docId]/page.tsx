@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import ChatPanel from "./components/ChatPanel";
 
 interface DocumentInfo {
   id: string;
@@ -16,7 +17,7 @@ export default function WorkspacePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Placeholder: In the next step, we'll fetch document info from API
+    // Placeholder: In production, fetch document info from API
     // For now, just show the docId
     setDocument({
       id: docId,
@@ -38,30 +39,49 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <h1 className="text-xl font-semibold text-gray-900">
             {document?.title}
           </h1>
-          <p className="text-sm text-gray-500">Dokument-ID: {docId}</p>
+          <p className="text-sm text-gray-500">Lernassistent Workspace</p>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Workspace</h2>
-          <p className="text-gray-600">
-            Dein Dokument wurde erfolgreich hochgeladen und verarbeitet.
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Features werden in den nächsten Schritten implementiert:
-          </p>
-          <ul className="list-disc list-inside mt-2 text-sm text-gray-500 space-y-1">
-            <li>Feature B: Context-aware Chat</li>
-            <li>Feature C: Shown Reasoning (Quellenangaben)</li>
-            <li>Feature A: Adaptive Content (Quiz & Zusammenfassung)</li>
-          </ul>
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+          {/* Chat Panel - Feature B (DP2: Responsiveness) */}
+          <div className="h-[calc(100vh-200px)]">
+            <ChatPanel documentId={docId} />
+          </div>
+
+          {/* Content Panel - Will be used for Features A & C */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold mb-4 text-gray-900">
+                Zusammenfassung & Quiz
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Feature A (Adaptive Content) wird hier angezeigt.
+              </p>
+              <p className="text-gray-500 text-xs mt-2">
+                Zusammenfassung und adaptive Quizfragen basierend auf deinen Schwachstellen.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold mb-4 text-gray-900">
+                Transparenz & Quellen
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Feature C (Shown Reasoning) ist bereits im Chat integriert.
+              </p>
+              <p className="text-gray-500 text-xs mt-2">
+                Jede Chat-Antwort zeigt die Quellen (Seitenzahlen) an.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
