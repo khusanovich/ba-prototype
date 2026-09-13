@@ -49,6 +49,24 @@ export async function POST(request: NextRequest) {
  * Generate a summary of the uploaded material
  */
 async function generateSummary(documentId: string) {
+  // Check if summary already exists
+  const { data: existingSummary } = await supabase
+    .from("summaries")
+    .select("*")
+    .eq("document_id", documentId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (existingSummary) {
+    return NextResponse.json({
+      summary: existingSummary.content,
+      pageNumbers: existingSummary.page_numbers || [],
+      chunksUsed: 0,
+      cached: true,
+    });
+  }
+
   // Retrieve representative chunks (using a broad query)
   const chunks = await retrieveChunks(
     "Hauptthemen Zusammenfassung Überblick",
@@ -80,10 +98,18 @@ Zusammenfassung:`;
     .filter((p, i, arr) => arr.indexOf(p) === i)
     .sort((a, b) => a - b);
 
+  // Save summary to database
+  await supabase.from("summaries").insert({
+    document_id: documentId,
+    content: summary,
+    page_numbers: pageNumbers,
+  });
+
   return NextResponse.json({
     summary,
     pageNumbers,
     chunksUsed: chunks.length,
+    cached: false,
   });
 }
 
@@ -115,6 +141,38 @@ async function generateQuiz(documentId: string) {
   const weakTopics = Object.entries(topicStats)
     .filter(([_, stats]) => stats.wrong > stats.correct)
     .map(([topic, _]) => topic);
+
+  // Check if quiz already exists for these weak topics
+  const { data: existingQuizzes } = await supabase
+    .from("quizzes")
+    .select("*")
+    .eq("document_id", documentId)
+    .order("created_at", { ascending: false })
+    .limit(3);
+
+  // If we have recent quizzes with the same weak topics, return them
+  if (existingQuizzes && existingQuizzes.length > 0) {
+    const firstQuiz = existingQuizzes[0];
+    const sameWeakTopics =
+      JSON.stringify(firstQuiz.weak_topics?.sort()) === JSON.stringify(weakTopics.sort());
+
+    if (sameWeakTopics || weakTopics.length === 0) {
+      const questions = existingQuizzes.map(q => ({
+        topic: q.topic,
+        question: q.question,
+        options: q.options as string[],
+        correctIndex: q.correct_index,
+        explanation: q.explanation,
+      }));
+
+      return NextResponse.json({
+        questions,
+        weakTopics,
+        adaptedTo: weakTopics.length > 0 ? "weak topics" : "general material",
+        cached: true,
+      });
+    }
+  }
 
   // 3. Retrieve relevant chunks
   let query = "Konzepte Definitionen wichtige Themen";
@@ -167,10 +225,24 @@ Nur das JSON zurückgeben, keine zusätzlichen Erklärungen.`;
   try {
     const quizData = JSON.parse(responseText);
 
+    // Save quiz questions to database
+    const quizzesToInsert = quizData.questions.map((q: any) => ({
+      document_id: documentId,
+      topic: q.topic,
+      question: q.question,
+      options: q.options,
+      correct_index: q.correctIndex,
+      explanation: q.explanation,
+      weak_topics: weakTopics.length > 0 ? weakTopics : null,
+    }));
+
+    await supabase.from("quizzes").insert(quizzesToInsert);
+
     return NextResponse.json({
       questions: quizData.questions,
       weakTopics,
       adaptedTo: weakTopics.length > 0 ? "weak topics" : "general material",
+      cached: false,
     });
   } catch (parseError) {
     console.error("Failed to parse quiz JSON:", responseText);

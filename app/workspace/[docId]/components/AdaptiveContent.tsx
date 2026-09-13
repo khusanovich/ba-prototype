@@ -18,11 +18,13 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
   const [summary, setSummary] = useState<string>("");
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryPageNumbers, setSummaryPageNumbers] = useState<number[]>([]);
+  const [summaryCached, setSummaryCached] = useState(false);
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [quizLoading, setQuizLoading] = useState(false);
   const [weakTopics, setWeakTopics] = useState<string[]>([]);
   const [adaptedTo, setAdaptedTo] = useState<string>("");
+  const [quizCached, setQuizCached] = useState(false);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -47,6 +49,7 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
         const data = await response.json();
         setSummary(data.summary);
         setSummaryPageNumbers(data.pageNumbers || []);
+        setSummaryCached(data.cached || false);
       }
     } catch (error) {
       console.error("Failed to load summary:", error);
@@ -69,6 +72,7 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
         setQuestions(data.questions || []);
         setWeakTopics(data.weakTopics || []);
         setAdaptedTo(data.adaptedTo || "");
+        setQuizCached(data.cached || false);
       }
     } catch (error) {
       console.error("Failed to load quiz:", error);
@@ -129,9 +133,16 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
     <div className="space-y-6">
       {/* Summary Section */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold mb-4 text-gray-900">
-          Zusammenfassung
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Zusammenfassung
+          </h2>
+          {summaryCached && (
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+              Gespeichert
+            </span>
+          )}
+        </div>
 
         {summaryLoading ? (
           <div className="animate-pulse space-y-3">
@@ -159,7 +170,14 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
       {/* Quiz Section */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Quiz</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-900">Quiz</h2>
+            {quizCached && (
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                Gespeichert
+              </span>
+            )}
+          </div>
           {questions.length > 0 && (
             <span className="text-sm text-gray-500">
               Frage {currentQuestionIndex + 1} von {questions.length}

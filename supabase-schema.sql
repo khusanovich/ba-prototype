@@ -31,7 +31,29 @@ create table quiz_attempts (
   created_at timestamptz default now()
 );
 
--- 5. Similarity search function (cosine distance) for RAG retrieval
+-- 5. Generated summaries table - stores summaries for each document
+create table summaries (
+  id uuid primary key default gen_random_uuid(),
+  document_id uuid references documents(id) on delete cascade,
+  content text not null,
+  page_numbers int[],        -- source pages for transparency (DP3)
+  created_at timestamptz default now()
+);
+
+-- 6. Generated quizzes table - stores quiz questions for each document
+create table quizzes (
+  id uuid primary key default gen_random_uuid(),
+  document_id uuid references documents(id) on delete cascade,
+  topic text not null,
+  question text not null,
+  options jsonb not null,    -- array of answer options
+  correct_index int not null,
+  explanation text not null,
+  weak_topics text[],        -- topics this quiz adapted to
+  created_at timestamptz default now()
+);
+
+-- 7. Similarity search function (cosine distance) for RAG retrieval
 create or replace function match_chunks (
   query_embedding vector(768),
   match_document_id uuid,
@@ -56,11 +78,13 @@ as $$
   limit match_count;
 $$;
 
--- 6. Create index on embeddings for faster vector search
+-- 8. Create index on embeddings for faster vector search
 create index if not exists chunks_embedding_idx on chunks
 using ivfflat (embedding vector_cosine_ops)
 with (lists = 100);
 
--- 7. Create index on document_id for faster filtering
+-- 9. Create indexes on document_id for faster filtering
 create index if not exists chunks_document_id_idx on chunks(document_id);
 create index if not exists quiz_attempts_document_id_idx on quiz_attempts(document_id);
+create index if not exists summaries_document_id_idx on summaries(document_id);
+create index if not exists quizzes_document_id_idx on quizzes(document_id);
