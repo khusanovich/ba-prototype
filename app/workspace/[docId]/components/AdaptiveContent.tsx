@@ -205,14 +205,14 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
                 const showResult = answered;
 
                 let buttonClass =
-                  "w-full text-left p-3 rounded border-2 transition-colors ";
+                  "w-full text-left p-3 rounded border-2 transition-colors text-gray-900 ";
 
                 if (!showResult) {
                   buttonClass += "border-gray-300 hover:border-indigo-500 hover:bg-indigo-50";
                 } else if (isCorrect) {
-                  buttonClass += "border-green-500 bg-green-50";
+                  buttonClass += "border-green-500 bg-green-50 text-green-900";
                 } else if (isSelected && !isCorrect) {
-                  buttonClass += "border-red-500 bg-red-50";
+                  buttonClass += "border-red-500 bg-red-50 text-red-900";
                 } else {
                   buttonClass += "border-gray-300";
                 }
