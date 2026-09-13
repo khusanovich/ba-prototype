@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+
+interface Document {
+  id: string;
+  title: string;
+  created_at: string;
+}
 
 export default function Home() {
   const router = useRouter();
@@ -9,6 +15,26 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>("");
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(true);
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
+  const loadDocuments = async () => {
+    try {
+      const response = await fetch("/api/documents");
+      if (response.ok) {
+        const data = await response.json();
+        setDocuments(data.documents || []);
+      }
+    } catch (err) {
+      console.error("Failed to load documents:", err);
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -62,8 +88,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-6xl mx-auto py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Upload Section */}
+          <div className="bg-white rounded-lg shadow-xl p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Lernassistent
@@ -133,6 +162,91 @@ export default function Home() {
             <p className="text-xs text-gray-500 mt-1">Dies kann 30-60 Sekunden dauern.</p>
           </div>
         )}
+      </div>
+
+          {/* Documents List Section */}
+          <div className="bg-white rounded-lg shadow-xl p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Meine Dokumente
+              </h2>
+              <p className="text-gray-600">
+                Bereits hochgeladene PDFs
+              </p>
+            </div>
+
+            {loadingDocs ? (
+              <div className="space-y-3">
+                <div className="animate-pulse h-16 bg-gray-200 rounded"></div>
+                <div className="animate-pulse h-16 bg-gray-200 rounded"></div>
+                <div className="animate-pulse h-16 bg-gray-200 rounded"></div>
+              </div>
+            ) : documents.length === 0 ? (
+              <div className="text-center py-12">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <p className="mt-4 text-gray-500">
+                  Noch keine Dokumente hochgeladen
+                </p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Lade dein erstes PDF hoch, um zu beginnen
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                {documents.map((doc) => (
+                  <button
+                    key={doc.id}
+                    onClick={() => router.push(`/workspace/${doc.id}`)}
+                    className="w-full text-left p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors group"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 group-hover:text-indigo-700">
+                          {doc.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Hochgeladen am{" "}
+                          {new Date(doc.created_at).toLocaleDateString("de-DE", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                      <svg
+                        className="h-5 w-5 text-gray-400 group-hover:text-indigo-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
