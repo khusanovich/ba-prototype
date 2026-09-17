@@ -19,6 +19,8 @@ export default function WorkspacePage() {
   const docId = params.docId as string;
   const [document, setDocument] = useState<DocumentInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showDocList, setShowDocList] = useState(false);
+  const [allDocuments, setAllDocuments] = useState<DocumentInfo[]>([]);
 
   useEffect(() => {
     // Fetch document info from API
@@ -37,6 +39,25 @@ export default function WorkspacePage() {
     };
     loadDocument();
   }, [docId]);
+
+  const loadAllDocuments = async () => {
+    try {
+      const response = await fetch("/api/documents");
+      if (response.ok) {
+        const data = await response.json();
+        setAllDocuments(data.documents || []);
+      }
+    } catch (error) {
+      console.error("Failed to load documents:", error);
+    }
+  };
+
+  const toggleDocList = () => {
+    if (!showDocList) {
+      loadAllDocuments();
+    }
+    setShowDocList(!showDocList);
+  };
 
   if (loading) {
     return (
@@ -62,8 +83,12 @@ export default function WorkspacePage() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => router.push("/")}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                onClick={toggleDocList}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                  showDocList
+                    ? "bg-indigo-700 text-white"
+                    : "bg-indigo-600 text-white hover:bg-indigo-700"
+                }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -78,7 +103,7 @@ export default function WorkspacePage() {
                     d="M4 6h16M4 12h16M4 18h16"
                   />
                 </svg>
-                Alle Dokumente
+                {showDocList ? "Liste ausblenden" : "Alle Dokumente"}
               </button>
             </div>
           </div>
@@ -120,6 +145,91 @@ export default function WorkspacePage() {
             <ChatPanel documentId={docId} />
           </div>
         </div>
+
+        {/* Document List Panel - Collapsible at Bottom */}
+        {showDocList && (
+          <div className="mt-6 bg-white rounded-lg shadow-lg border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Alle Dokumente ({allDocuments.length})
+                </h3>
+                <button
+                  onClick={() => setShowDocList(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-4 max-h-80 overflow-y-auto">
+              {allDocuments.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">
+                  Keine Dokumente gefunden
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {allDocuments.map((doc) => (
+                    <button
+                      key={doc.id}
+                      onClick={() => {
+                        router.push(`/workspace/${doc.id}`);
+                        setShowDocList(false);
+                      }}
+                      className={`p-4 text-left rounded-lg border-2 transition-all ${
+                        doc.id === docId
+                          ? "border-indigo-600 bg-indigo-50"
+                          : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`font-medium truncate ${
+                            doc.id === docId ? "text-indigo-900" : "text-gray-900"
+                          }`}>
+                            {doc.title}
+                            {doc.id === docId && (
+                              <span className="ml-2 text-xs bg-indigo-600 text-white px-2 py-0.5 rounded">
+                                Aktiv
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(doc.created_at).toLocaleDateString("de-DE", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            })}
+                            {doc.page_count && (
+                              <span className="ml-2">• {doc.page_count} Seiten</span>
+                            )}
+                          </p>
+                        </div>
+                        {doc.id !== docId && (
+                          <svg
+                            className="w-4 h-4 text-gray-400 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
