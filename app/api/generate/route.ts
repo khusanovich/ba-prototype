@@ -129,7 +129,25 @@ Zusammenfassung:`;
  * Generate quiz questions, adaptive to previous attempts
  */
 async function generateQuiz(documentId: string) {
-  // 1. Fetch quiz attempts to identify weak topics
+  // 1. Get document info to determine quiz size
+  const { data: documentData } = await supabase
+    .from("documents")
+    .select("page_count")
+    .eq("id", documentId)
+    .single();
+
+  // Determine number of questions based on document size
+  const pageCount = documentData?.page_count || 0;
+  let questionCount = 3; // Default for small docs
+  if (pageCount >= 20) {
+    questionCount = 10;
+  } else if (pageCount >= 10) {
+    questionCount = 6;
+  }
+
+  console.log(`Generating ${questionCount} questions for ${pageCount}-page document`);
+
+  // 2. Fetch quiz attempts to identify weak topics
   const { data: attempts } = await supabase
     .from("quiz_attempts")
     .select("*")
@@ -160,10 +178,10 @@ async function generateQuiz(documentId: string) {
     .select("*")
     .eq("document_id", documentId)
     .order("created_at", { ascending: false })
-    .limit(3);
+    .limit(questionCount);
 
-  // If we have recent quizzes with the same weak topics, return them
-  if (existingQuizzes && existingQuizzes.length > 0) {
+  // If we have recent quizzes with the same weak topics and question count, return them
+  if (existingQuizzes && existingQuizzes.length === questionCount) {
     const firstQuiz = existingQuizzes[0];
     const sameWeakTopics =
       JSON.stringify(firstQuiz.weak_topics?.sort()) === JSON.stringify(weakTopics.sort());
@@ -204,7 +222,7 @@ Konzentriere dich besonders auf diese Bereiche.`;
 
   const prompt = `${context}${adaptiveInstructions}
 
-Erstelle 3 Multiple-Choice-Fragen auf Deutsch basierend auf dem obigen Lernmaterial.
+Erstelle ${questionCount} Multiple-Choice-Fragen auf Deutsch basierend auf dem obigen Lernmaterial.
 
 Jede Frage soll:
 - Ein wichtiges Konzept aus dem Material testen

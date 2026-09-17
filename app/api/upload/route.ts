@@ -80,11 +80,34 @@ export async function POST(request: NextRequest) {
 
     console.log(`Extracted ${pages.length} pages from PDF`);
 
-    // 2. Create document record
+    // 2. Upload PDF to Supabase Storage
+    const fileName = `${Date.now()}-${file.name}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("pdfs")
+      .upload(fileName, arrayBuffer, {
+        contentType: "application/pdf",
+        cacheControl: "3600",
+      });
+
+    let pdfUrl = null;
+    if (!uploadError && uploadData) {
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("pdfs")
+        .getPublicUrl(fileName);
+      pdfUrl = urlData.publicUrl;
+      console.log("PDF uploaded to storage:", pdfUrl);
+    } else {
+      console.warn("PDF upload to storage failed, continuing without URL:", uploadError);
+    }
+
+    // 3. Create document record
     const { data: document, error: docError } = await supabase
       .from("documents")
       .insert({
-        title: file.name,
+        title: file.name.replace(".pdf", ""),
+        pdf_url: pdfUrl,
+        page_count: totalPages,
       })
       .select()
       .single();

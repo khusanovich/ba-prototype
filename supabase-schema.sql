@@ -8,6 +8,8 @@ create extension if not exists vector;
 create table documents (
   id uuid primary key default gen_random_uuid(),
   title text not null,
+  pdf_url text,              -- URL to PDF in Supabase Storage (optional)
+  page_count int,            -- Total number of pages
   created_at timestamptz default now()
 );
 
