@@ -76,7 +76,6 @@ async function generateSummary(documentId: string) {
 
   const context = formatChunksAsContext(chunks);
 
-  const model = getChatModel();
   const prompt = `${context}
 
 Erstelle eine prägnante Zusammenfassung des obigen Lernmaterials auf Deutsch.
@@ -89,7 +88,20 @@ Die Zusammenfassung soll:
 
 Zusammenfassung:`;
 
-  const result = await model.generateContent(prompt);
+  // Try with primary model, fallback to experimental if 503
+  let result;
+  try {
+    const model = getChatModel();
+    result = await model.generateContent(prompt);
+  } catch (error: any) {
+    if (error.status === 503) {
+      console.log("⚠️  Primary model unavailable, trying fallback model...");
+      const fallbackModel = getChatModel(true);
+      result = await fallbackModel.generateContent(prompt);
+    } else {
+      throw error;
+    }
+  }
   const summary = result.response.text();
 
   const pageNumbers = chunks
@@ -190,7 +202,6 @@ async function generateQuiz(documentId: string) {
 Konzentriere dich besonders auf diese Bereiche.`;
   }
 
-  const model = getChatModel();
   const prompt = `${context}${adaptiveInstructions}
 
 Erstelle 3 Multiple-Choice-Fragen auf Deutsch basierend auf dem obigen Lernmaterial.
@@ -216,7 +227,20 @@ Format (als JSON):
 
 Nur das JSON zurückgeben, keine zusätzlichen Erklärungen.`;
 
-  const result = await model.generateContent(prompt);
+  // Try with primary model, fallback to experimental if 503
+  let result;
+  try {
+    const model = getChatModel();
+    result = await model.generateContent(prompt);
+  } catch (error: any) {
+    if (error.status === 503) {
+      console.log("⚠️  Primary model unavailable, trying fallback model...");
+      const fallbackModel = getChatModel(true);
+      result = await fallbackModel.generateContent(prompt);
+    } else {
+      throw error;
+    }
+  }
   let responseText = result.response.text();
 
   // Clean up markdown code blocks if present

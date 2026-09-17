@@ -31,10 +31,7 @@ export async function POST(request: NextRequest) {
     // 3. Build conversation history
     const conversationHistory = history || [];
 
-    // 4. Create the chat model
-    const model = getChatModel();
-
-    // 5. Build the prompt with context
+    // 4. Build the prompt with context
     const prompt = `${context}
 
 Basierend auf dem obigen Lernmaterial beantworte die folgende Frage des Studierenden:
@@ -47,16 +44,32 @@ Wichtig:
 - Wenn die Information nicht im Material steht, sage das ehrlich
 - Antworte auf Deutsch`;
 
-    // 6. Start chat session
-    const chat = model.startChat({
-      history: conversationHistory.map((msg: { role: string; content: string }) => ({
-        role: msg.role === "assistant" ? "model" : msg.role, // Gemini uses "model" not "assistant"
-        parts: [{ text: msg.content }],
-      })),
-    });
-
-    // 7. Send message and stream response
-    const result = await chat.sendMessageStream(prompt);
+    // 5. Create chat model and start session with retry logic
+    let result;
+    try {
+      const model = getChatModel();
+      const chat = model.startChat({
+        history: conversationHistory.map((msg: { role: string; content: string }) => ({
+          role: msg.role === "assistant" ? "model" : msg.role, // Gemini uses "model" not "assistant"
+          parts: [{ text: msg.content }],
+        })),
+      });
+      result = await chat.sendMessageStream(prompt);
+    } catch (error: any) {
+      if (error.status === 503) {
+        console.log("⚠️  Primary model unavailable, trying fallback model...");
+        const fallbackModel = getChatModel(true);
+        const chat = fallbackModel.startChat({
+          history: conversationHistory.map((msg: { role: string; content: string }) => ({
+            role: msg.role === "assistant" ? "model" : msg.role,
+            parts: [{ text: msg.content }],
+          })),
+        });
+        result = await chat.sendMessageStream(prompt);
+      } else {
+        throw error;
+      }
+    }
 
     // 8. Create a readable stream for the response
     const encoder = new TextEncoder();

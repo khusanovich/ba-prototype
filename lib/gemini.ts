@@ -25,10 +25,12 @@ export const SYSTEM_INSTRUCTION = `Du bist ein Lernassistent. Antworte immer auf
 /**
  * Get the chat model with system instruction
  * Uses gemini-flash-latest (2025 available model)
+ * Falls back to gemini-2.0-flash-exp if primary model has high demand
  */
-export function getChatModel() {
+export function getChatModel(useFallback: boolean = false) {
+  const modelName = useFallback ? "gemini-2.0-flash-exp" : "gemini-flash-latest";
   return genAI.getGenerativeModel({
-    model: "gemini-flash-latest",
+    model: modelName,
     systemInstruction: SYSTEM_INSTRUCTION,
   });
 }
