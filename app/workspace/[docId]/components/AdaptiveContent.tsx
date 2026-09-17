@@ -12,9 +12,10 @@ interface QuizQuestion {
 
 interface AdaptiveContentProps {
   documentId: string;
+  mode?: "summary" | "quiz";
 }
 
-export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
+export default function AdaptiveContent({ documentId, mode = "summary" }: AdaptiveContentProps) {
   const [summary, setSummary] = useState<string>("");
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryPageNumbers, setSummaryPageNumbers] = useState<number[]>([]);
@@ -32,10 +33,13 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
   const [answered, setAnswered] = useState(false);
 
   useEffect(() => {
-    // Auto-generate summary and quiz on mount
-    loadSummary();
-    loadQuiz();
-  }, [documentId]);
+    // Auto-generate based on mode
+    if (mode === "summary") {
+      loadSummary();
+    } else if (mode === "quiz") {
+      loadQuiz();
+    }
+  }, [documentId, mode]);
 
   const loadSummary = async () => {
     setSummaryLoading(true);
@@ -130,10 +134,10 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  return (
-    <div className="space-y-6">
-      {/* Summary Section */}
-      <div className="bg-white rounded-lg shadow p-6">
+  // Render only summary or only quiz based on mode
+  if (mode === "summary") {
+    return (
+      <div className="bg-white rounded-lg shadow p-6 h-full overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-900">
             Zusammenfassung
@@ -175,9 +179,12 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
           </div>
         )}
       </div>
+    );
+  }
 
-      {/* Quiz Section */}
-      <div className="bg-white rounded-lg shadow p-6">
+  // mode === "quiz"
+  return (
+    <div className="bg-white rounded-lg shadow p-6 h-full overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-gray-900">Quiz</h2>
@@ -290,7 +297,6 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
             </button>
           </div>
         )}
-      </div>
     </div>
   );
 }

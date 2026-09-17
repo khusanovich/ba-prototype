@@ -176,11 +176,16 @@ export default function WorkspacePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-140px)]">
           {/* Left Column - Summary */}
           <div className="overflow-y-auto">
-            <AdaptiveContent documentId={docId} />
+            <AdaptiveContent documentId={docId} mode="summary" />
           </div>
 
-          {/* Middle Column - PDF Viewer */}
-          {document?.pdf_url && (
+          {/* Middle Column - Quiz */}
+          <div className="overflow-y-auto">
+            <AdaptiveContent documentId={docId} mode="quiz" />
+          </div>
+
+          {/* Right Column - PDF Viewer */}
+          {document?.pdf_url ? (
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="bg-gray-100 px-4 py-2 border-b">
                 <h3 className="text-sm font-medium text-gray-700">
@@ -200,12 +205,11 @@ export default function WorkspacePage() {
                 />
               </div>
             </div>
+          ) : (
+            <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+              <p className="text-sm">Kein PDF verfügbar</p>
+            </div>
           )}
-
-          {/* Right Column - Placeholder for future content */}
-          <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
-            <p className="text-sm">Zukünftige Inhalte</p>
-          </div>
         </div>
       </div>
 
