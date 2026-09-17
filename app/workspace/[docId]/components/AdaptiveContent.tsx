@@ -32,9 +32,9 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
   const [answered, setAnswered] = useState(false);
 
   useEffect(() => {
-    // Don't auto-load on mount, wait for user to click generate
-    // loadSummary();
-    // loadQuiz();
+    // Auto-generate summary and quiz on mount
+    loadSummary();
+    loadQuiz();
   }, [documentId]);
 
   const loadSummary = async () => {

@@ -21,6 +21,7 @@ export default function WorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [showDocList, setShowDocList] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentInfo[]>([]);
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     // Fetch document info from API
@@ -93,53 +94,92 @@ export default function WorkspacePage() {
                 onClick={() => router.push("/")}
                 className="px-4 py-2 text-sm font-medium text-indigo-600 bg-white border-2 border-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors flex items-center gap-2"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 Neues Dokument
               </button>
               <button
-                onClick={toggleDocList}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
-                  showDocList
-                    ? "bg-indigo-700 text-white"
-                    : "bg-indigo-600 text-white hover:bg-indigo-700"
-                }`}
+                onClick={() => setShowChat(!showChat)}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                {showDocList ? "Liste ausblenden" : "Alle Dokumente"}
-                <span className="text-xs opacity-75">({allDocuments.length})</span>
+                Chat
               </button>
+              <div className="relative">
+                <button
+                  onClick={toggleDocList}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  Alle Dokumente
+                  <svg className={`w-4 h-4 transition-transform ${showDocList ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {/* Dropdown Menu */}
+                {showDocList && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b border-gray-200 bg-gray-50">
+                      <p className="text-sm font-medium text-gray-700">
+                        Dokumente ({allDocuments.length})
+                      </p>
+                    </div>
+                    {allDocuments.length === 0 ? (
+                      <p className="p-4 text-sm text-gray-500 text-center">Keine Dokumente</p>
+                    ) : (
+                      <div className="p-2">
+                        {allDocuments.map((doc) => (
+                          <button
+                            key={doc.id}
+                            onClick={() => {
+                              router.push(`/workspace/${doc.id}`);
+                              setShowDocList(false);
+                            }}
+                            className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${
+                              doc.id === docId
+                                ? "bg-indigo-50 border border-indigo-200"
+                                : "hover:bg-gray-50"
+                            }`}
+                          >
+                            <p className={`text-sm font-medium truncate ${
+                              doc.id === docId ? "text-indigo-900" : "text-gray-900"
+                            }`}>
+                              {doc.title}
+                              {doc.id === docId && (
+                                <span className="ml-2 text-xs bg-indigo-600 text-white px-2 py-0.5 rounded">
+                                  Aktiv
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(doc.created_at).toLocaleDateString("de-DE")}
+                              {doc.page_count && ` • ${doc.page_count} Seiten`}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <div className="flex-1 w-full mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 h-[calc(100vh-140px)]">
-          {/* PDF Viewer - Left Column */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-140px)]">
+          {/* Left Column - Summary */}
+          <div className="overflow-y-auto">
+            <AdaptiveContent documentId={docId} />
+          </div>
+
+          {/* Middle Column - PDF Viewer */}
           {document?.pdf_url && (
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="bg-gray-100 px-4 py-2 border-b">
@@ -162,110 +202,35 @@ export default function WorkspacePage() {
             </div>
           )}
 
-          {/* Content Panel - Middle Column */}
-          <div className="overflow-y-auto">
-            <AdaptiveContent documentId={docId} />
-          </div>
-
-          {/* Chat Panel - Right Column */}
-          <div>
-            <ChatPanel documentId={docId} />
+          {/* Right Column - Placeholder for future content */}
+          <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+            <p className="text-sm">Zukünftige Inhalte</p>
           </div>
         </div>
-
-        {/* Debug State */}
-        <div className="mt-4 p-2 bg-gray-100 text-xs border border-gray-300 rounded">
-          DEBUG State: showDocList={String(showDocList)}, allDocuments={allDocuments.length}
-        </div>
-
-        {/* Document List Panel - Collapsible at Bottom */}
-        {showDocList && (
-          <div className="mt-6 bg-white rounded-lg shadow-lg border-2 border-red-500">
-            <div className="p-2 bg-yellow-100 text-xs">
-              DEBUG: Panel is visible. Documents: {allDocuments.length}
-            </div>
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Alle Dokumente ({allDocuments.length})
-                </h3>
-                <button
-                  onClick={() => setShowDocList(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div className="p-4 max-h-80 overflow-y-auto">
-              {allDocuments.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  Keine Dokumente gefunden
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {allDocuments.map((doc) => (
-                    <button
-                      key={doc.id}
-                      onClick={() => {
-                        router.push(`/workspace/${doc.id}`);
-                        setShowDocList(false);
-                      }}
-                      className={`p-4 text-left rounded-lg border-2 transition-all ${
-                        doc.id === docId
-                          ? "border-indigo-600 bg-indigo-50"
-                          : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h4 className={`font-medium truncate ${
-                            doc.id === docId ? "text-indigo-900" : "text-gray-900"
-                          }`}>
-                            {doc.title}
-                            {doc.id === docId && (
-                              <span className="ml-2 text-xs bg-indigo-600 text-white px-2 py-0.5 rounded">
-                                Aktiv
-                              </span>
-                            )}
-                          </h4>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(doc.created_at).toLocaleDateString("de-DE", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            })}
-                            {doc.page_count && (
-                              <span className="ml-2">• {doc.page_count} Seiten</span>
-                            )}
-                          </p>
-                        </div>
-                        {doc.id !== docId && (
-                          <svg
-                            className="w-4 h-4 text-gray-400 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Chat Slide-in Panel */}
+      {showChat && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-30 z-40"
+            onClick={() => setShowChat(false)}
+          />
+          {/* Slide-in Panel */}
+          <div className="fixed right-0 top-0 h-full w-full md:w-96 bg-white shadow-2xl z-50 transform transition-transform">
+            <ChatPanel documentId={docId} />
+            <button
+              onClick={() => setShowChat(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
