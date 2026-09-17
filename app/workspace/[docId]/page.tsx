@@ -56,10 +56,14 @@ export default function WorkspacePage() {
   };
 
   const toggleDocList = async () => {
+    console.log("toggleDocList called, current showDocList:", showDocList);
     if (!showDocList) {
+      console.log("Loading documents...");
       await loadAllDocuments();
     }
-    setShowDocList(!showDocList);
+    const newValue = !showDocList;
+    console.log("Setting showDocList to:", newValue);
+    setShowDocList(newValue);
   };
 
   if (loading) {
@@ -126,6 +130,7 @@ export default function WorkspacePage() {
                   />
                 </svg>
                 {showDocList ? "Liste ausblenden" : "Alle Dokumente"}
+                <span className="text-xs opacity-75">({allDocuments.length})</span>
               </button>
             </div>
           </div>
@@ -166,6 +171,11 @@ export default function WorkspacePage() {
           <div>
             <ChatPanel documentId={docId} />
           </div>
+        </div>
+
+        {/* Debug State */}
+        <div className="mt-4 p-2 bg-gray-100 text-xs border border-gray-300 rounded">
+          DEBUG State: showDocList={String(showDocList)}, allDocuments={allDocuments.length}
         </div>
 
         {/* Document List Panel - Collapsible at Bottom */}
