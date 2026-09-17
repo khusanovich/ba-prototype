@@ -32,8 +32,9 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
   const [answered, setAnswered] = useState(false);
 
   useEffect(() => {
-    loadSummary();
-    loadQuiz();
+    // Don't auto-load on mount, wait for user to click generate
+    // loadSummary();
+    // loadQuiz();
   }, [documentId]);
 
   const loadSummary = async () => {
@@ -161,9 +162,17 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
             )}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">
-            Keine Zusammenfassung verfügbar.
-          </p>
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm mb-4">
+              Noch keine Zusammenfassung erstellt.
+            </p>
+            <button
+              onClick={loadSummary}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+            >
+              Zusammenfassung generieren
+            </button>
+          </div>
         )}
       </div>
 
@@ -204,7 +213,7 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
             <div className="h-10 bg-gray-200 rounded"></div>
             <div className="h-10 bg-gray-200 rounded"></div>
           </div>
-        ) : currentQuestion ? (
+        ) : questions.length > 0 && currentQuestion ? (
           <div className="space-y-4">
             <div className="mb-4">
               <span className="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded">
@@ -269,7 +278,17 @@ export default function AdaptiveContent({ documentId }: AdaptiveContentProps) {
             )}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">Keine Fragen verfügbar.</p>
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm mb-4">
+              Noch kein Quiz erstellt.
+            </p>
+            <button
+              onClick={loadQuiz}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+            >
+              Quiz generieren
+            </button>
+          </div>
         )}
       </div>
     </div>

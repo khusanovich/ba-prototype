@@ -170,7 +170,10 @@ export default function WorkspacePage() {
 
         {/* Document List Panel - Collapsible at Bottom */}
         {showDocList && (
-          <div className="mt-6 bg-white rounded-lg shadow-lg border border-gray-200">
+          <div className="mt-6 bg-white rounded-lg shadow-lg border-2 border-red-500">
+            <div className="p-2 bg-yellow-100 text-xs">
+              DEBUG: Panel is visible. Documents: {allDocuments.length}
+            </div>
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900">
