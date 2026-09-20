@@ -20,7 +20,7 @@ create table chunks (
   content text not null,
   page_number int,           -- for DP3 "shown reasoning": where it came from
   chunk_index int,           -- order within the document
-  embedding vector(768),     -- Gemini text-embedding-004 dimension
+  embedding vector(1536),    -- OpenAI text-embedding-3-small dimension
   created_at timestamptz default now()
 );
 
@@ -57,7 +57,7 @@ create table quizzes (
 
 -- 7. Similarity search function (cosine distance) for RAG retrieval
 create or replace function match_chunks (
-  query_embedding vector(768),
+  query_embedding vector(1536),
   match_document_id uuid,
   match_count int default 5
 )

@@ -8,7 +8,7 @@
  */
 
 import { NextRequest } from "next/server";
-import { getChatModel } from "@/lib/gemini";
+import { openai, SYSTEM_INSTRUCTION } from "@/lib/openai";
 import { retrieveChunks, formatChunksAsContext } from "@/lib/rag";
 
 export async function POST(request: NextRequest) {
@@ -44,42 +44,41 @@ Wichtig:
 - Wenn die Information nicht im Material steht, sage das ehrlich
 - Antworte auf Deutsch`;
 
-    // 5. Create chat model and start session with retry logic
-    let result;
-    try {
-      const model = getChatModel();
-      const chat = model.startChat({
-        history: conversationHistory.map((msg: { role: string; content: string }) => ({
-          role: msg.role === "assistant" ? "model" : msg.role, // Gemini uses "model" not "assistant"
-          parts: [{ text: msg.content }],
-        })),
-      });
-      result = await chat.sendMessageStream(prompt);
-    } catch (error: any) {
-      if (error.status === 503) {
-        console.log("⚠️  Primary model unavailable, trying fallback model...");
-        const fallbackModel = getChatModel(true);
-        const chat = fallbackModel.startChat({
-          history: conversationHistory.map((msg: { role: string; content: string }) => ({
-            role: msg.role === "assistant" ? "model" : msg.role,
-            parts: [{ text: msg.content }],
-          })),
-        });
-        result = await chat.sendMessageStream(prompt);
-      } else {
-        throw error;
-      }
-    }
+    // 5. Build messages array for OpenAI
+    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+      { role: "system", content: SYSTEM_INSTRUCTION }
+    ];
 
-    // 8. Create a readable stream for the response
+    // Add conversation history
+    conversationHistory.forEach((msg: { role: string; content: string }) => {
+      if (msg.role === "user" || msg.role === "assistant") {
+        messages.push({ role: msg.role as "user" | "assistant", content: msg.content });
+      }
+    });
+
+    // Add current message with context
+    messages.push({ role: "user", content: prompt });
+
+    // 6. Create streaming response from OpenAI
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages,
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 2000,
+    });
+
+    // 7. Create a readable stream for the response
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // Stream the text chunks
-          for await (const chunk of result.stream) {
-            const text = chunk.text();
-            controller.enqueue(encoder.encode(text));
+          // Stream the text chunks from OpenAI
+          for await (const chunk of response) {
+            const text = chunk.choices[0]?.delta?.content || "";
+            if (text) {
+              controller.enqueue(encoder.encode(text));
+            }
           }
 
           // Send metadata about sources at the end

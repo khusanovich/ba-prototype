@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { extractText } from "unpdf";
 import { supabase } from "@/lib/supabase";
 import { chunkDocument } from "@/lib/chunking";
-import { generateEmbeddingsBatch } from "@/lib/gemini";
+import { generateEmbeddingsBatch } from "@/lib/openai";
 
 export async function POST(request: NextRequest) {
   try {

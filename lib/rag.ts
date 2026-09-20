@@ -3,7 +3,7 @@
  * Handles query embedding and chunk retrieval
  */
 
-import { generateEmbedding } from "./gemini";
+import { generateEmbedding } from "./openai";
 import { supabase, type MatchedChunk } from "./supabase";
 
 /**

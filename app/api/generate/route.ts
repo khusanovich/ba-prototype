@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getChatModel } from "@/lib/gemini";
+import { openai } from "@/lib/openai";
 import { retrieveChunks, formatChunksAsContext } from "@/lib/rag";
 import { supabase } from "@/lib/supabase";
 
@@ -88,21 +88,15 @@ Die Zusammenfassung soll:
 
 Zusammenfassung:`;
 
-  // Try with primary model, fallback to experimental if 503
-  let result;
-  try {
-    const model = getChatModel();
-    result = await model.generateContent(prompt);
-  } catch (error: any) {
-    if (error.status === 503) {
-      console.log("⚠️  Primary model unavailable, trying fallback model...");
-      const fallbackModel = getChatModel(true);
-      result = await fallbackModel.generateContent(prompt);
-    } else {
-      throw error;
-    }
-  }
-  const summary = result.response.text();
+  // Generate summary using OpenAI
+  const result = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+    max_tokens: 1000,
+  });
+
+  const summary = result.choices[0]?.message?.content || "";
 
   const pageNumbers = chunks
     .map(c => c.page_number)
@@ -245,21 +239,15 @@ Format (als JSON):
 
 Nur das JSON zurückgeben, keine zusätzlichen Erklärungen.`;
 
-  // Try with primary model, fallback to experimental if 503
-  let result;
-  try {
-    const model = getChatModel();
-    result = await model.generateContent(prompt);
-  } catch (error: any) {
-    if (error.status === 503) {
-      console.log("⚠️  Primary model unavailable, trying fallback model...");
-      const fallbackModel = getChatModel(true);
-      result = await fallbackModel.generateContent(prompt);
-    } else {
-      throw error;
-    }
-  }
-  let responseText = result.response.text();
+  // Generate quiz using OpenAI
+  const result = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+    max_tokens: 2000,
+  });
+
+  let responseText = result.choices[0]?.message?.content || "";
 
   // Clean up markdown code blocks if present
   responseText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
