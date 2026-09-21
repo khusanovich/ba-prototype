@@ -38,6 +38,10 @@ export async function POST(request: NextRequest) {
     // 1. Parse PDF
     console.log("Parsing PDF:", file.name);
     const arrayBuffer = await file.arrayBuffer();
+
+    // Clone the arrayBuffer for storage upload (extractText consumes it)
+    const arrayBufferForStorage = arrayBuffer.slice(0);
+
     const { text, totalPages } = await extractText(arrayBuffer);
 
     // unpdf returns text as an array of page texts
@@ -84,7 +88,7 @@ export async function POST(request: NextRequest) {
     const fileName = `${Date.now()}-${file.name}`;
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("pdfs")
-      .upload(fileName, arrayBuffer, {
+      .upload(fileName, arrayBufferForStorage, {
         contentType: "application/pdf",
         cacheControl: "3600",
       });
