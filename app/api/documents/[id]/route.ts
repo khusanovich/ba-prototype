@@ -14,7 +14,7 @@ export async function GET(
 
     const { data: document, error } = await supabase
       .from("documents")
-      .select("id, title, created_at")
+      .select("id, title, created_at, pdf_url, page_count")
       .eq("id", id)
       .single();
 
