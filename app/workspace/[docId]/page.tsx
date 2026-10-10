@@ -22,6 +22,7 @@ export default function WorkspacePage() {
   const [showDocList, setShowDocList] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentInfo[]>([]);
   const [showChat, setShowChat] = useState(false);
+  const [language, setLanguage] = useState<"de" | "en">("de");
 
   useEffect(() => {
     // Fetch document info from API
@@ -90,6 +91,30 @@ export default function WorkspacePage() {
               <p className="text-sm text-gray-500">Lernassistent Workspace</p>
             </div>
             <div className="flex items-center gap-3">
+              {/* Language Switcher */}
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setLanguage("de")}
+                  className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
+                    language === "de"
+                      ? "bg-white text-indigo-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  DE
+                </button>
+                <button
+                  onClick={() => setLanguage("en")}
+                  className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
+                    language === "en"
+                      ? "bg-white text-indigo-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  EN
+                </button>
+              </div>
+
               <button
                 onClick={() => router.push("/")}
                 className="px-4 py-2 text-sm font-medium text-indigo-600 bg-white border-2 border-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors flex items-center gap-2"
@@ -176,12 +201,12 @@ export default function WorkspacePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-140px)]">
           {/* Left Column - Summary */}
           <div className="overflow-y-auto">
-            <AdaptiveContent documentId={docId} mode="summary" />
+            <AdaptiveContent documentId={docId} mode="summary" language={language} />
           </div>
 
           {/* Middle Column - Quiz */}
           <div className="overflow-y-auto">
-            <AdaptiveContent documentId={docId} mode="quiz" />
+            <AdaptiveContent documentId={docId} mode="quiz" language={language} />
           </div>
 
           {/* Right Column - PDF Viewer */}
@@ -232,7 +257,7 @@ export default function WorkspacePage() {
             <div className="flex h-full">
               {/* Chat Section - 40% */}
               <div className="w-[40%] border-r border-gray-200">
-                <ChatPanel documentId={docId} />
+                <ChatPanel documentId={docId} language={language} />
               </div>
 
               {/* PDF Section - 60% */}

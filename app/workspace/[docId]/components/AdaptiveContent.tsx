@@ -13,9 +13,10 @@ interface QuizQuestion {
 interface AdaptiveContentProps {
   documentId: string;
   mode?: "summary" | "quiz";
+  language?: "de" | "en";
 }
 
-export default function AdaptiveContent({ documentId, mode = "summary" }: AdaptiveContentProps) {
+export default function AdaptiveContent({ documentId, mode = "summary", language = "de" }: AdaptiveContentProps) {
   const [summary, setSummary] = useState<string>("");
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryPageNumbers, setSummaryPageNumbers] = useState<number[]>([]);
@@ -33,13 +34,13 @@ export default function AdaptiveContent({ documentId, mode = "summary" }: Adapti
   const [answered, setAnswered] = useState(false);
 
   useEffect(() => {
-    // Auto-generate based on mode
+    // Auto-generate based on mode, reload when language changes
     if (mode === "summary") {
       loadSummary();
     } else if (mode === "quiz") {
       loadQuiz();
     }
-  }, [documentId, mode]);
+  }, [documentId, mode, language]);
 
   const loadSummary = async () => {
     setSummaryLoading(true);
@@ -47,7 +48,7 @@ export default function AdaptiveContent({ documentId, mode = "summary" }: Adapti
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId, type: "summary" }),
+        body: JSON.stringify({ documentId, type: "summary", language }),
       });
 
       if (response.ok) {
@@ -69,7 +70,7 @@ export default function AdaptiveContent({ documentId, mode = "summary" }: Adapti
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId, type: "quiz" }),
+        body: JSON.stringify({ documentId, type: "quiz", language }),
       });
 
       if (response.ok) {

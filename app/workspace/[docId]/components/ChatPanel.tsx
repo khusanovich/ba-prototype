@@ -10,9 +10,10 @@ interface Message {
 
 interface ChatPanelProps {
   documentId: string;
+  language?: "de" | "en";
 }
 
-export default function ChatPanel({ documentId }: ChatPanelProps) {
+export default function ChatPanel({ documentId, language = "de" }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +55,7 @@ export default function ChatPanel({ documentId }: ChatPanelProps) {
           documentId,
           message: input,
           history,
+          language,
         }),
       });
 
