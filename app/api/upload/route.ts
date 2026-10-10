@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const language = (formData.get("language") as string) || "de";
 
     if (!file) {
       return NextResponse.json(
@@ -113,7 +112,6 @@ export async function POST(request: NextRequest) {
         title: file.name.replace(".pdf", ""),
         pdf_url: pdfUrl,
         page_count: totalPages,
-        language: language,
       })
       .select()
       .single();
