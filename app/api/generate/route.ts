@@ -11,10 +11,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 import { retrieveChunks, formatChunksAsContext } from "@/lib/rag";
 import { supabase } from "@/lib/supabase";
+import { getSummaryPrompt, getQuizPrompt, getRetrievalQuery } from "@/lib/prompts";
 
 export async function POST(request: NextRequest) {
   try {
-    const { documentId, type } = await request.json();
+    const { documentId, type, language = "de" } = await request.json();
 
     if (!documentId || !type) {
       return NextResponse.json(
@@ -24,9 +25,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === "summary") {
-      return await generateSummary(documentId);
+      return await generateSummary(documentId, language);
     } else if (type === "quiz") {
-      return await generateQuiz(documentId);
+      return await generateQuiz(documentId, language);
     } else {
       return NextResponse.json(
         { error: "Invalid type. Must be 'summary' or 'quiz'" },
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
 /**
  * Generate a summary of the uploaded material
  */
-async function generateSummary(documentId: string) {
+async function generateSummary(documentId: string, language: "de" | "en" = "de") {
   // Check if summary already exists
   const { data: existingSummary } = await supabase
     .from("summaries")
@@ -68,25 +69,10 @@ async function generateSummary(documentId: string) {
   }
 
   // Retrieve representative chunks (using a broad query)
-  const chunks = await retrieveChunks(
-    "Hauptthemen Zusammenfassung Überblick",
-    documentId,
-    10
-  );
-
+  const query = getRetrievalQuery("summary", [], language);
+  const chunks = await retrieveChunks(query, documentId, 10);
   const context = formatChunksAsContext(chunks);
-
-  const prompt = `${context}
-
-Erstelle eine prägnante Zusammenfassung des obigen Lernmaterials auf Deutsch.
-
-Die Zusammenfassung soll:
-- Die Hauptthemen und Konzepte hervorheben
-- 3-5 Absätze umfassen
-- Klar strukturiert sein
-- Für Studierende verständlich sein
-
-Zusammenfassung:`;
+  const prompt = getSummaryPrompt(context, language);
 
   // Generate summary using OpenAI
   const result = await openai.chat.completions.create({
@@ -122,7 +108,7 @@ Zusammenfassung:`;
 /**
  * Generate quiz questions, adaptive to previous attempts
  */
-async function generateQuiz(documentId: string) {
+async function generateQuiz(documentId: string, language: "de" | "en" = "de") {
   // 1. Get document info to determine quiz size
   const { data: documentData } = await supabase
     .from("documents")
@@ -199,45 +185,10 @@ async function generateQuiz(documentId: string) {
   }
 
   // 3. Retrieve relevant chunks
-  let query = "Konzepte Definitionen wichtige Themen";
-  if (weakTopics.length > 0) {
-    query = `${weakTopics.join(" ")} Konzepte Definitionen`;
-  }
-
+  const query = getRetrievalQuery("quiz", weakTopics, language);
   const chunks = await retrieveChunks(query, documentId, 8);
   const context = formatChunksAsContext(chunks);
-
-  // 4. Build adaptive prompt
-  let adaptiveInstructions = "";
-  if (weakTopics.length > 0) {
-    adaptiveInstructions = `\nDer Studierende hatte Schwierigkeiten bei folgenden Themen: ${weakTopics.join(", ")}.
-Konzentriere dich besonders auf diese Bereiche.`;
-  }
-
-  const prompt = `${context}${adaptiveInstructions}
-
-Erstelle ${questionCount} Multiple-Choice-Fragen auf Deutsch basierend auf dem obigen Lernmaterial.
-
-Jede Frage soll:
-- Ein wichtiges Konzept aus dem Material testen
-- 4 Antwortmöglichkeiten haben (A, B, C, D)
-- Genau eine richtige Antwort haben
-- Einen kurzen Topic-Label haben (2-3 Wörter, z.B. "Maschinelles Lernen")
-
-Format (als JSON):
-{
-  "questions": [
-    {
-      "topic": "Topic Label",
-      "question": "Die Frage?",
-      "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-      "correctIndex": 0,
-      "explanation": "Warum ist diese Antwort richtig?"
-    }
-  ]
-}
-
-Nur das JSON zurückgeben, keine zusätzlichen Erklärungen.`;
+  const prompt = getQuizPrompt(context, questionCount, weakTopics, language);
 
   // Generate quiz using OpenAI
   const result = await openai.chat.completions.create({

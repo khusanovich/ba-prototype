@@ -8,12 +8,13 @@
  */
 
 import { NextRequest } from "next/server";
-import { openai, SYSTEM_INSTRUCTION } from "@/lib/openai";
+import { openai } from "@/lib/openai";
 import { retrieveChunks, formatChunksAsContext } from "@/lib/rag";
+import { getChatPrompt, getChatSystemInstruction } from "@/lib/prompts";
 
 export async function POST(request: NextRequest) {
   try {
-    const { documentId, message, history } = await request.json();
+    const { documentId, message, history, language = "de" } = await request.json();
 
     if (!documentId || !message) {
       return new Response(
@@ -31,22 +32,13 @@ export async function POST(request: NextRequest) {
     // 3. Build conversation history
     const conversationHistory = history || [];
 
-    // 4. Build the prompt with context
-    const prompt = `${context}
+    // 4. Build the prompt with context (language-aware)
+    const prompt = getChatPrompt(context, message, language);
 
-Basierend auf dem obigen Lernmaterial beantworte die folgende Frage des Studierenden:
-
-${message}
-
-Wichtig:
-- Beziehe dich ausschließlich auf das bereitgestellte Material
-- Gib die Seitenzahlen an, auf die du dich stützt
-- Wenn die Information nicht im Material steht, sage das ehrlich
-- Antworte auf Deutsch`;
-
-    // 5. Build messages array for OpenAI
+    // 5. Build messages array for OpenAI (language-aware system instruction)
+    const systemInstruction = getChatSystemInstruction(language);
     const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-      { role: "system", content: SYSTEM_INSTRUCTION }
+      { role: "system", content: systemInstruction }
     ];
 
     // Add conversation history
