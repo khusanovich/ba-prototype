@@ -46,6 +46,10 @@ export default function Home() {
       if (selectedFile.type !== "application/pdf") {
         setError("Bitte wähle eine PDF-Datei aus.");
         setFile(null);
+      } else if (selectedFile.size > 4 * 1024 * 1024) {
+        // 4MB limit for Vercel Hobby plan
+        setError("Die Datei ist zu groß. Maximal 4 MB sind erlaubt.");
+        setFile(null);
       } else {
         setFile(selectedFile);
         setError(null);
@@ -72,8 +76,19 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Upload fehlgeschlagen");
+        let errorMessage = "Upload fehlgeschlagen";
+        try {
+          const data = await response.json();
+          errorMessage = data.error || errorMessage;
+        } catch {
+          // Response is not JSON (e.g., 413 Request Entity Too Large)
+          if (response.status === 413) {
+            errorMessage = "Die Datei ist zu groß für den Server.";
+          } else {
+            errorMessage = `Server-Fehler (${response.status})`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       setUploadProgress("Text wird extrahiert und analysiert...");
