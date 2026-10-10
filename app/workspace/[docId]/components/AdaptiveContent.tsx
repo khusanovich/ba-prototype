@@ -141,11 +141,11 @@ export default function AdaptiveContent({ documentId, mode = "summary", language
       <div className="bg-white rounded-lg shadow p-6 h-full overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-900">
-            Zusammenfassung
+            {language === "de" ? "Zusammenfassung" : "Summary"}
           </h2>
           {summaryCached && (
             <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-              Gespeichert
+              {language === "de" ? "Gespeichert" : "Cached"}
             </span>
           )}
         </div>
@@ -161,7 +161,10 @@ export default function AdaptiveContent({ documentId, mode = "summary", language
             <p className="text-gray-700 whitespace-pre-wrap">{summary}</p>
             {summaryPageNumbers.length > 0 && (
               <div className="mt-4 pt-4 border-t text-sm text-gray-500">
-                <span className="font-medium">Quellen:</span> Seite{" "}
+                <span className="font-medium">
+                  {language === "de" ? "Quellen:" : "Sources:"}
+                </span>{" "}
+                {language === "de" ? "Seite" : "Page"}{" "}
                 {summaryPageNumbers.join(", ")}
               </div>
             )}
@@ -169,13 +172,15 @@ export default function AdaptiveContent({ documentId, mode = "summary", language
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500 text-sm mb-4">
-              Noch keine Zusammenfassung erstellt.
+              {language === "de"
+                ? "Noch keine Zusammenfassung erstellt."
+                : "No summary created yet."}
             </p>
             <button
               onClick={loadSummary}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
             >
-              Zusammenfassung generieren
+              {language === "de" ? "Zusammenfassung generieren" : "Generate Summary"}
             </button>
           </div>
         )}
@@ -191,13 +196,15 @@ export default function AdaptiveContent({ documentId, mode = "summary", language
             <h2 className="text-lg font-semibold text-gray-900">Quiz</h2>
             {quizCached && (
               <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                Gespeichert
+                {language === "de" ? "Gespeichert" : "Cached"}
               </span>
             )}
           </div>
           {questions.length > 0 && (
             <span className="text-sm text-gray-500">
-              Frage {currentQuestionIndex + 1} von {questions.length}
+              {language === "de"
+                ? `Frage ${currentQuestionIndex + 1} von ${questions.length}`
+                : `Question ${currentQuestionIndex + 1} of ${questions.length}`}
             </span>
           )}
         </div>
@@ -205,7 +212,9 @@ export default function AdaptiveContent({ documentId, mode = "summary", language
         {weakTopics.length > 0 && (
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
             <p className="font-medium text-yellow-900">
-              Schwerpunkt auf Schwachstellen:
+              {language === "de"
+                ? "Schwerpunkt auf Schwachstellen:"
+                : "Focus on weak topics:"}
             </p>
             <p className="text-yellow-700 mt-1">
               {weakTopics.join(", ")}
@@ -267,7 +276,9 @@ export default function AdaptiveContent({ documentId, mode = "summary", language
 
             {answered && showExplanation && (
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
-                <p className="font-medium text-blue-900 mb-2">Erklärung:</p>
+                <p className="font-medium text-blue-900 mb-2">
+                  {language === "de" ? "Erklärung:" : "Explanation:"}
+                </p>
                 <p className="text-blue-800 text-sm">
                   {currentQuestion.explanation}
                 </p>
@@ -280,21 +291,25 @@ export default function AdaptiveContent({ documentId, mode = "summary", language
                 className="mt-4 w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors"
               >
                 {currentQuestionIndex < questions.length - 1
-                  ? "Nächste Frage"
-                  : "Quiz neu laden (adaptiv)"}
+                  ? language === "de"
+                    ? "Nächste Frage"
+                    : "Next Question"
+                  : language === "de"
+                  ? "Quiz neu laden (adaptiv)"
+                  : "Reload Quiz (adaptive)"}
               </button>
             )}
           </div>
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500 text-sm mb-4">
-              Noch kein Quiz erstellt.
+              {language === "de" ? "Noch kein Quiz erstellt." : "No quiz created yet."}
             </p>
             <button
               onClick={loadQuiz}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
             >
-              Quiz generieren
+              {language === "de" ? "Quiz generieren" : "Generate Quiz"}
             </button>
           </div>
         )}
