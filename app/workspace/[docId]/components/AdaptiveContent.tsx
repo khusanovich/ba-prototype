@@ -264,7 +264,7 @@ export default function AdaptiveContent({ documentId, mode = "summary" }: Adapti
               })}
             </div>
 
-            {showExplanation && (
+            {answered && showExplanation && (
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
                 <p className="font-medium text-blue-900 mb-2">Erklärung:</p>
                 <p className="text-blue-800 text-sm">
