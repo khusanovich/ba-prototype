@@ -50,23 +50,9 @@ export async function POST(request: NextRequest) {
  * Generate a summary of the uploaded material
  */
 async function generateSummary(documentId: string, language: "de" | "en" = "de") {
-  // Check if summary already exists
-  const { data: existingSummary } = await supabase
-    .from("summaries")
-    .select("*")
-    .eq("document_id", documentId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (existingSummary) {
-    return NextResponse.json({
-      summary: existingSummary.content,
-      pageNumbers: existingSummary.page_numbers || [],
-      chunksUsed: 0,
-      cached: true,
-    });
-  }
+  // NOTE: We don't cache summaries by language, always regenerate for now
+  // This ensures language switching works properly
+  // TODO: Add language column to summaries table for proper caching
 
   // Retrieve representative chunks (using a broad query)
   const query = getRetrievalQuery("summary", [], language);
@@ -152,37 +138,9 @@ async function generateQuiz(documentId: string, language: "de" | "en" = "de") {
     .filter(([_, stats]) => stats.wrong > stats.correct)
     .map(([topic, _]) => topic);
 
-  // Check if quiz already exists for these weak topics
-  const { data: existingQuizzes } = await supabase
-    .from("quizzes")
-    .select("*")
-    .eq("document_id", documentId)
-    .order("created_at", { ascending: false })
-    .limit(questionCount);
-
-  // If we have recent quizzes with the same weak topics and question count, return them
-  if (existingQuizzes && existingQuizzes.length === questionCount) {
-    const firstQuiz = existingQuizzes[0];
-    const sameWeakTopics =
-      JSON.stringify(firstQuiz.weak_topics?.sort()) === JSON.stringify(weakTopics.sort());
-
-    if (sameWeakTopics || weakTopics.length === 0) {
-      const questions = existingQuizzes.map(q => ({
-        topic: q.topic,
-        question: q.question,
-        options: q.options as string[],
-        correctIndex: q.correct_index,
-        explanation: q.explanation,
-      }));
-
-      return NextResponse.json({
-        questions,
-        weakTopics,
-        adaptedTo: weakTopics.length > 0 ? "weak topics" : "general material",
-        cached: true,
-      });
-    }
-  }
+  // NOTE: We don't cache quizzes by language, always regenerate for now
+  // This ensures language switching works properly
+  // TODO: Add language column to quizzes table for proper caching
 
   // 3. Retrieve relevant chunks
   const query = getRetrievalQuery("quiz", weakTopics, language);
