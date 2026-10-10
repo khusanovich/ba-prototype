@@ -13,6 +13,7 @@ interface Document {
 export default function Home() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
+  const [language, setLanguage] = useState<"de" | "en">("de");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>("");
@@ -67,6 +68,7 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("language", language);
 
       setUploadProgress("PDF wird verarbeitet...");
 
@@ -205,6 +207,22 @@ export default function Home() {
                 Klicken zum Hochladen
               </p>
             </label>
+          </div>
+
+          <div>
+            <label htmlFor="language-select" className="block text-sm font-medium text-gray-700 mb-2">
+              Dokumentsprache
+            </label>
+            <select
+              id="language-select"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as "de" | "en")}
+              disabled={uploading}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+            >
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
           </div>
 
           {error && (
