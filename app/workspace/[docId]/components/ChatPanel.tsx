@@ -137,29 +137,36 @@ export default function ChatPanel({ documentId, language = "de" }: ChatPanelProp
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow">
-      {/* Header */}
-      <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold text-gray-900">Chat</h2>
-        <p className="text-sm text-gray-500">
+      {/* Compact Header */}
+      <div className="px-4 py-2 border-b bg-gradient-to-r from-green-50 to-green-100">
+        <div className="flex items-center gap-2">
+          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <h2 className="text-base font-semibold text-gray-900">
+            {language === "de" ? "Chat-Assistent" : "Chat Assistant"}
+          </h2>
+        </div>
+        <p className="text-xs text-gray-600 mt-0.5">
           {language === "de"
-            ? "Stelle Fragen zu deinem Lernmaterial"
-            : "Ask questions about your learning material"}
+            ? "Stelle Fragen zu Quiz, Zusammenfassung oder Material"
+            : "Ask questions about quiz, summary or material"}
         </p>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages - more compact */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-8">
-            <p>
+          <div className="text-center text-gray-500 mt-4">
+            <p className="text-sm">
               {language === "de"
-                ? "Stelle eine Frage, um zu beginnen!"
-                : "Ask a question to get started!"}
+                ? "💬 Stelle eine Frage zum Material!"
+                : "💬 Ask a question about the material!"}
             </p>
-            <p className="text-sm mt-2">
+            <p className="text-xs mt-1 text-gray-400">
               {language === "de"
-                ? 'Beispiel: "Was sind die Hauptthemen in diesem Material?"'
-                : 'Example: "What are the main topics in this material?"'}
+                ? 'z.B. "Erkläre mir diese Quiz-Frage"'
+                : 'e.g. "Explain this quiz question"'}
             </p>
           </div>
         )}
@@ -172,17 +179,17 @@ export default function ChatPanel({ documentId, language = "de" }: ChatPanelProp
             }`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                 message.role === "user"
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-green-600 text-white"
                   : "bg-gray-100 text-gray-900"
               }`}
             >
-              <p className="whitespace-pre-wrap">{message.content}</p>
+              <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
               {message.pageNumbers && message.pageNumbers.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-300 text-sm opacity-75">
+                <div className="mt-1.5 pt-1.5 border-t border-gray-300 text-xs opacity-75">
                   <span className="font-medium">
-                    {language === "de" ? "Quellen:" : "Sources:"}
+                    {language === "de" ? "📄 Quellen:" : "📄 Sources:"}
                   </span>{" "}
                   {language === "de" ? "Seite" : "Page"}{" "}
                   {message.pageNumbers.join(", ")}
@@ -194,11 +201,11 @@ export default function ChatPanel({ documentId, language = "de" }: ChatPanelProp
 
         {isLoading && messages[messages.length - 1]?.role === "user" && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-lg p-3">
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+            <div className="bg-gray-100 rounded-lg px-3 py-2">
+              <div className="flex space-x-1.5">
+                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-100"></div>
+                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-200"></div>
               </div>
             </div>
           </div>
@@ -207,25 +214,28 @@ export default function ChatPanel({ documentId, language = "de" }: ChatPanelProp
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t">
-        <div className="flex space-x-2">
-          <textarea
+      {/* Compact Input */}
+      <div className="p-3 border-t bg-gray-50">
+        <div className="flex gap-2">
+          <input
+            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder={
-              language === "de" ? "Stelle eine Frage..." : "Ask a question..."
+              language === "de" ? "Frage eingeben..." : "Enter question..."
             }
-            className="flex-1 resize-none border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 placeholder-gray-400"
-            rows={2}
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-400"
             disabled={isLoading}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-1"
           >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
             {language === "de" ? "Senden" : "Send"}
           </button>
         </div>

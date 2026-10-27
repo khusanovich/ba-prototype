@@ -21,7 +21,6 @@ export default function WorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [showDocList, setShowDocList] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentInfo[]>([]);
-  const [showChat, setShowChat] = useState(false);
   const [language, setLanguage] = useState<"de" | "en">("de");
 
   useEffect(() => {
@@ -124,15 +123,6 @@ export default function WorkspacePage() {
                 </svg>
                 Neues Dokument
               </button>
-              <button
-                onClick={() => setShowChat(!showChat)}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                Chat
-              </button>
               <div className="relative">
                 <button
                   onClick={toggleDocList}
@@ -204,9 +194,17 @@ export default function WorkspacePage() {
             <AdaptiveContent documentId={docId} mode="summary" language={language} />
           </div>
 
-          {/* Middle Column - Quiz */}
-          <div className="overflow-y-auto">
-            <AdaptiveContent documentId={docId} mode="quiz" language={language} />
+          {/* Middle Column - Quiz + Chat */}
+          <div className="flex flex-col gap-4 overflow-hidden">
+            {/* Quiz Section - takes 60% of height */}
+            <div className="h-[55%] overflow-y-auto">
+              <AdaptiveContent documentId={docId} mode="quiz" language={language} />
+            </div>
+
+            {/* Chat Section - takes 40% of height, always visible */}
+            <div className="h-[45%] overflow-hidden">
+              <ChatPanel documentId={docId} language={language} />
+            </div>
           </div>
 
           {/* Right Column - PDF Viewer */}
@@ -237,59 +235,6 @@ export default function WorkspacePage() {
           )}
         </div>
       </div>
-
-      {/* Chat Slide-in Panel with PDF Viewer (Side-by-Side) - Full Width */}
-      {showChat && (
-        <>
-          {/* Full-screen Panel - 100% width, Chat (40%) + PDF (60%) */}
-          <div className="fixed inset-0 bg-white z-50 transform transition-transform">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowChat(false)}
-              className="absolute top-4 right-4 z-10 text-gray-500 hover:text-gray-700 bg-white rounded-full p-2 shadow-lg"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Side-by-Side Layout: Chat (40%) | PDF (60%) */}
-            <div className="flex h-full">
-              {/* Chat Section - 40% */}
-              <div className="w-[40%] border-r border-gray-200">
-                <ChatPanel documentId={docId} language={language} />
-              </div>
-
-              {/* PDF Section - 60% */}
-              <div className="w-[60%] bg-gray-50 flex flex-col">
-                <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-700">
-                    PDF Dokument
-                    {document?.page_count && (
-                      <span className="ml-2 text-gray-500">
-                        ({document.page_count} Seiten)
-                      </span>
-                    )}
-                  </h3>
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  {document?.pdf_url ? (
-                    <iframe
-                      src={document.pdf_url}
-                      className="w-full h-full"
-                      title="PDF Viewer"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
-                      <p className="text-sm">Kein PDF verfügbar</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

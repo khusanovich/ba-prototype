@@ -18,6 +18,26 @@ import { generateEmbeddingsBatch } from "@/lib/openai";
 
 export async function POST(request: NextRequest) {
   try {
+    // 0. Validate environment variables first
+    console.log("Validating environment variables...");
+    const missingVars = [];
+    if (!process.env.OPENAI_API_KEY) missingVars.push("OPENAI_API_KEY");
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missingVars.push("NEXT_PUBLIC_SUPABASE_URL");
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (missingVars.length > 0) {
+      console.error("Missing environment variables:", missingVars);
+      return NextResponse.json(
+        {
+          error: "Server configuration error",
+          details: `Missing environment variables: ${missingVars.join(", ")}`,
+          debugInfo: "Please check Vercel environment variables settings"
+        },
+        { status: 500 }
+      );
+    }
+    console.log("Environment variables OK");
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -37,19 +57,37 @@ export async function POST(request: NextRequest) {
 
     // 1. Parse PDF
     console.log("Parsing PDF:", file.name);
-    const arrayBuffer = await file.arrayBuffer();
+    let arrayBuffer: ArrayBuffer;
+    let text: string | string[];
+    let totalPages: number;
+
+    try {
+      arrayBuffer = await file.arrayBuffer();
+      console.log(`PDF file size: ${arrayBuffer.byteLength} bytes`);
+    } catch (error) {
+      console.error("Error reading PDF file:", error);
+      throw new Error("Failed to read PDF file: " + (error instanceof Error ? error.message : "Unknown error"));
+    }
 
     // Clone the arrayBuffer for storage upload (extractText consumes it)
     const arrayBufferForStorage = arrayBuffer.slice(0);
 
-    const { text, totalPages } = await extractText(arrayBuffer);
+    try {
+      const result = await extractText(arrayBuffer);
+      text = result.text;
+      totalPages = result.totalPages;
+      console.log(`Extracted text from ${totalPages} pages`);
+    } catch (error) {
+      console.error("Error extracting text from PDF:", error);
+      throw new Error("Failed to extract text from PDF. The file might be corrupted or password-protected: " + (error instanceof Error ? error.message : "Unknown error"));
+    }
 
     // unpdf returns text as an array of page texts
     const fullText = Array.isArray(text) ? text.join("\n\n") : text;
 
     if (!fullText || fullText.trim().length === 0) {
       return NextResponse.json(
-        { error: "Could not extract text from PDF" },
+        { error: "Could not extract text from PDF", details: "The PDF appears to be empty or contains only images without text" },
         { status: 400 }
       );
     }
@@ -133,9 +171,17 @@ export async function POST(request: NextRequest) {
     // 4. Generate embeddings for all chunks
     console.log("Generating embeddings...");
     const chunkTexts = chunks.map((c) => c.content);
-    const embeddings = await generateEmbeddingsBatch(chunkTexts);
+    let embeddings: number[][];
 
-    console.log("Embeddings generated");
+    try {
+      embeddings = await generateEmbeddingsBatch(chunkTexts);
+      console.log("Embeddings generated successfully");
+    } catch (error) {
+      console.error("Error generating embeddings:", error);
+      // Clean up document if embedding generation fails
+      await supabase.from("documents").delete().eq("id", document.id);
+      throw new Error("Failed to generate embeddings. Check OpenAI API key and quota: " + (error instanceof Error ? error.message : "Unknown error"));
+    }
 
     // 5. Insert chunks with embeddings into database
     const chunksToInsert = chunks.map((chunk, index) => ({
@@ -170,8 +216,32 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Upload error:", error);
+
+    // Provide more detailed error information
+    let errorMessage = "Failed to process PDF";
+    let errorDetails = "Unknown error occurred";
+
+    if (error instanceof Error) {
+      errorDetails = error.message;
+
+      // Provide context-specific messages
+      if (error.message.includes("OPENAI_API_KEY")) {
+        errorMessage = "OpenAI API configuration error";
+      } else if (error.message.includes("Supabase") || error.message.includes("supabase")) {
+        errorMessage = "Database connection error";
+      } else if (error.message.includes("PDF") || error.message.includes("extract")) {
+        errorMessage = "PDF parsing error";
+      } else if (error.message.includes("embedding")) {
+        errorMessage = "Embedding generation error";
+      }
+    }
+
     return NextResponse.json(
-      { error: "Failed to process PDF" },
+      {
+        error: errorMessage,
+        details: errorDetails,
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
