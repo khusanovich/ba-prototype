@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 interface Message {
   role: "user" | "assistant";
@@ -185,7 +189,42 @@ export default function ChatPanel({ documentId, language = "de" }: ChatPanelProp
                   : "bg-gray-100 text-gray-900"
               }`}
             >
-              <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+              <div className={`leading-relaxed ${message.role === "user" ? "text-white" : "text-gray-900"}`}>
+                <ReactMarkdown
+                  remarkPlugins={[remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
+                  components={{
+                    // Custom styling for markdown elements with proper colors
+                    p: ({ children }) => (
+                      <p className={`mb-2 last:mb-0 ${message.role === "user" ? "text-white" : "text-gray-900"}`}>
+                        {children}
+                      </p>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className={`list-disc list-inside mb-2 ${message.role === "user" ? "text-white" : "text-gray-900"}`}>
+                        {children}
+                      </ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className={`list-decimal list-inside mb-2 ${message.role === "user" ? "text-white" : "text-gray-900"}`}>
+                        {children}
+                      </ol>
+                    ),
+                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                    code: ({ children }) => (
+                      <code className={`px-1 py-0.5 rounded text-xs ${
+                        message.role === "user"
+                          ? "bg-green-700 text-white"
+                          : "bg-gray-200 text-gray-900"
+                      }`}>
+                        {children}
+                      </code>
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
               {message.pageNumbers && message.pageNumbers.length > 0 && (
                 <div className="mt-1.5 pt-1.5 border-t border-gray-300 text-xs opacity-75">
                   <span className="font-medium">
