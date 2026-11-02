@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import ChatPanel from "./components/ChatPanel";
 import AdaptiveContent from "./components/AdaptiveContent";
 
@@ -23,12 +22,6 @@ export default function WorkspacePage() {
   const [showDocList, setShowDocList] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentInfo[]>([]);
   const [language, setLanguage] = useState<"de" | "en">("de");
-
-  // Collapse states for panels
-  const [summaryCollapsed, setSummaryCollapsed] = useState(false);
-  const [quizCollapsed, setQuizCollapsed] = useState(false);
-  const [chatCollapsed, setChatCollapsed] = useState(false);
-  const [pdfCollapsed, setPdfCollapsed] = useState(false);
 
   useEffect(() => {
     // Fetch document info from API
@@ -195,211 +188,52 @@ export default function WorkspacePage() {
       </header>
 
       <div className="flex-1 w-full mx-auto px-4 py-6">
-        <PanelGroup direction="horizontal" className="h-[calc(100vh-140px)]">
-          {/* Left Panel - Summary */}
-          <Panel
-            defaultSize={30}
-            minSize={15}
-            maxSize={50}
-            collapsible={true}
-            collapsedSize={3}
-          >
-            <div className="h-full pr-2 flex flex-col">
-              {summaryCollapsed ? (
-                <button
-                  onClick={() => setSummaryCollapsed(false)}
-                  className="h-full bg-indigo-50 hover:bg-indigo-100 rounded-lg flex items-center justify-center transition-colors"
-                  title="Zusammenfassung einblenden"
-                >
-                  <svg className="w-5 h-5 text-indigo-600 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between mb-2 px-2">
-                    <h3 className="text-sm font-medium text-gray-700">
-                      {language === "de" ? "Zusammenfassung" : "Summary"}
-                    </h3>
-                    <button
-                      onClick={() => setSummaryCollapsed(true)}
-                      className="p-1 hover:bg-gray-200 rounded transition-colors"
-                      title="Zuklappen"
-                    >
-                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <AdaptiveContent documentId={docId} mode="summary" language={language} />
-                  </div>
-                </>
-              )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-140px)]">
+          {/* Left Column - Summary */}
+          <div className="overflow-y-auto">
+            <AdaptiveContent documentId={docId} mode="summary" language={language} />
+          </div>
+
+          {/* Middle Column - Quiz + Chat */}
+          <div className="flex flex-col gap-4 overflow-hidden">
+            {/* Quiz Section - takes 60% of height */}
+            <div className="h-[55%] overflow-y-auto">
+              <AdaptiveContent documentId={docId} mode="quiz" language={language} />
             </div>
-          </Panel>
 
-          <PanelResizeHandle className="w-2 hover:bg-indigo-200 transition-colors cursor-col-resize flex items-center justify-center group">
-            <div className="w-1 h-12 bg-gray-300 rounded-full group-hover:bg-indigo-400 transition-colors" />
-          </PanelResizeHandle>
-
-          {/* Middle Panel - Quiz + Chat (Vertical Split) */}
-          <Panel defaultSize={40} minSize={25}>
-            <div className="h-full px-2">
-              <PanelGroup direction="vertical">
-                {/* Quiz Panel */}
-                <Panel
-                  defaultSize={55}
-                  minSize={20}
-                  collapsible={true}
-                  collapsedSize={5}
-                >
-                  <div className="h-full pb-2 flex flex-col">
-                    {quizCollapsed ? (
-                      <button
-                        onClick={() => setQuizCollapsed(false)}
-                        className="h-full bg-indigo-50 hover:bg-indigo-100 rounded-lg flex items-center justify-center transition-colors"
-                        title="Quiz einblenden"
-                      >
-                        <svg className="w-5 h-5 text-indigo-600 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    ) : (
-                      <>
-                        <div className="flex items-center justify-between mb-2 px-2">
-                          <h3 className="text-sm font-medium text-gray-700">Quiz</h3>
-                          <button
-                            onClick={() => setQuizCollapsed(true)}
-                            className="p-1 hover:bg-gray-200 rounded transition-colors"
-                            title="Zuklappen"
-                          >
-                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                          </button>
-                        </div>
-                        <div className="flex-1 overflow-hidden">
-                          <AdaptiveContent documentId={docId} mode="quiz" language={language} />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </Panel>
-
-                <PanelResizeHandle className="h-2 hover:bg-green-200 transition-colors cursor-row-resize flex items-center justify-center group">
-                  <div className="h-1 w-12 bg-gray-300 rounded-full group-hover:bg-green-400 transition-colors" />
-                </PanelResizeHandle>
-
-                {/* Chat Panel */}
-                <Panel
-                  defaultSize={45}
-                  minSize={20}
-                  collapsible={true}
-                  collapsedSize={5}
-                >
-                  <div className="h-full pt-2 flex flex-col">
-                    {chatCollapsed ? (
-                      <button
-                        onClick={() => setChatCollapsed(false)}
-                        className="h-full bg-green-50 hover:bg-green-100 rounded-lg flex items-center justify-center transition-colors"
-                        title="Chat einblenden"
-                      >
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    ) : (
-                      <>
-                        <div className="flex items-center justify-between mb-2 px-2">
-                          <h3 className="text-sm font-medium text-gray-700">
-                            {language === "de" ? "Chat-Assistent" : "Chat Assistant"}
-                          </h3>
-                          <button
-                            onClick={() => setChatCollapsed(true)}
-                            className="p-1 hover:bg-gray-200 rounded transition-colors"
-                            title="Zuklappen"
-                          >
-                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        </div>
-                        <div className="flex-1 overflow-hidden">
-                          <ChatPanel documentId={docId} language={language} />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </Panel>
-              </PanelGroup>
+            {/* Chat Section - takes 40% of height, always visible */}
+            <div className="h-[45%] overflow-hidden">
+              <ChatPanel documentId={docId} language={language} />
             </div>
-          </Panel>
+          </div>
 
-          <PanelResizeHandle className="w-2 hover:bg-indigo-200 transition-colors cursor-col-resize flex items-center justify-center group">
-            <div className="w-1 h-12 bg-gray-300 rounded-full group-hover:bg-indigo-400 transition-colors" />
-          </PanelResizeHandle>
-
-          {/* Right Panel - PDF Viewer */}
-          <Panel
-            defaultSize={30}
-            minSize={15}
-            maxSize={50}
-            collapsible={true}
-            collapsedSize={3}
-          >
-            <div className="h-full pl-2">
-              {pdfCollapsed ? (
-                <button
-                  onClick={() => setPdfCollapsed(false)}
-                  className="h-full bg-gray-50 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
-                  title="PDF einblenden"
-                >
-                  <svg className="w-5 h-5 text-gray-600 -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              ) : (
-                <>
-                  {document?.pdf_url ? (
-                    <div className="bg-white rounded-lg shadow overflow-hidden h-full flex flex-col">
-                      <div className="bg-gray-100 px-4 py-2 border-b flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-gray-700">
-                          PDF Dokument
-                          {document.page_count && (
-                            <span className="ml-2 text-gray-500">
-                              ({document.page_count} Seiten)
-                            </span>
-                          )}
-                        </h3>
-                        <button
-                          onClick={() => setPdfCollapsed(true)}
-                          className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          title="Zuklappen"
-                        >
-                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="flex-1">
-                        <iframe
-                          src={document.pdf_url}
-                          className="w-full h-full"
-                          title="PDF Viewer"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 h-full">
-                      <p className="text-sm">Kein PDF verfügbar</p>
-                    </div>
+          {/* Right Column - PDF Viewer */}
+          {document?.pdf_url ? (
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="bg-gray-100 px-4 py-2 border-b">
+                <h3 className="text-sm font-medium text-gray-700">
+                  PDF Dokument
+                  {document.page_count && (
+                    <span className="ml-2 text-gray-500">
+                      ({document.page_count} Seiten)
+                    </span>
                   )}
-                </>
-              )}
+                </h3>
+              </div>
+              <div className="h-[calc(100%-44px)]">
+                <iframe
+                  src={document.pdf_url}
+                  className="w-full h-full"
+                  title="PDF Viewer"
+                />
+              </div>
             </div>
-          </Panel>
-        </PanelGroup>
+          ) : (
+            <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+              <p className="text-sm">Kein PDF verfügbar</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
