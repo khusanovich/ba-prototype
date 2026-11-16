@@ -23,6 +23,31 @@ export default function WorkspacePage() {
   const [allDocuments, setAllDocuments] = useState<DocumentInfo[]>([]);
   const [language, setLanguage] = useState<"de" | "en">("de");
 
+  // Panel collapse states - all open by default
+  const [panels, setPanels] = useState({
+    summary: true,
+    quiz: true,
+    chat: true,
+    pdf: true
+  });
+
+  // Load panel states from localStorage on mount
+  useEffect(() => {
+    const savedPanels = localStorage.getItem('workspace-panels');
+    if (savedPanels) {
+      try {
+        setPanels(JSON.parse(savedPanels));
+      } catch (e) {
+        console.error('Failed to parse saved panel states:', e);
+      }
+    }
+  }, []);
+
+  // Save panel states to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('workspace-panels', JSON.stringify(panels));
+  }, [panels]);
+
   useEffect(() => {
     // Fetch document info from API
     const loadDocument = async () => {
@@ -65,6 +90,13 @@ export default function WorkspacePage() {
     const newValue = !showDocList;
     console.log("Setting showDocList to:", newValue);
     setShowDocList(newValue);
+  };
+
+  const togglePanel = (panelName: keyof typeof panels) => {
+    setPanels(prev => ({
+      ...prev,
+      [panelName]: !prev[panelName]
+    }));
   };
 
   if (loading) {
@@ -188,51 +220,136 @@ export default function WorkspacePage() {
       </header>
 
       <div className="flex-1 w-full mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-140px)]">
+        <div className="flex gap-4 h-[calc(100vh-140px)]">
           {/* Left Column - Summary */}
-          <div className="overflow-y-auto">
-            <AdaptiveContent documentId={docId} mode="summary" language={language} />
+          <div
+            className={`transition-all duration-300 overflow-hidden ${
+              panels.summary ? 'flex-1 min-w-[250px]' : 'w-12'
+            }`}
+          >
+            <div className="bg-white rounded-lg border border-gray-200 h-full flex flex-col">
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center justify-between">
+                <h3 className={`text-sm font-medium text-gray-700 ${!panels.summary && 'sr-only'}`}>
+                  Zusammenfassung
+                </h3>
+                <button
+                  onClick={() => togglePanel('summary')}
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded p-1 transition-colors"
+                  title={panels.summary ? 'Zuklappen' : 'Aufklappen'}
+                >
+                  <svg className={`w-4 h-4 transition-transform ${!panels.summary && 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              </div>
+              {panels.summary && (
+                <div className="overflow-y-auto flex-1 p-4">
+                  <AdaptiveContent documentId={docId} mode="summary" language={language} />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Middle Column - Quiz + Chat */}
-          <div className="flex flex-col gap-4 overflow-hidden">
-            {/* Quiz Section - takes 60% of height */}
-            <div className="h-[55%] overflow-y-auto">
-              <AdaptiveContent documentId={docId} mode="quiz" language={language} />
+          <div className="transition-all duration-300 flex flex-col gap-4 flex-1 min-w-[250px]">
+            {/* Quiz Section */}
+            <div
+              className={`transition-all duration-300 bg-white rounded-lg border border-gray-200 overflow-hidden ${
+                panels.quiz ? 'flex-1' : 'h-12'
+              }`}
+            >
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center">
+                <h3 className={`text-sm font-medium text-gray-700 flex-1 ${!panels.quiz && 'invisible'}`}>
+                  Quiz
+                </h3>
+                <button
+                  onClick={() => togglePanel('quiz')}
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded p-1 transition-colors flex-shrink-0"
+                  title={panels.quiz ? 'Zuklappen' : 'Aufklappen'}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+              {panels.quiz && (
+                <div className="overflow-y-auto h-[calc(100%-44px)] p-4">
+                  <AdaptiveContent documentId={docId} mode="quiz" language={language} />
+                </div>
+              )}
             </div>
 
-            {/* Chat Section - takes 40% of height, always visible */}
-            <div className="h-[45%] overflow-hidden">
-              <ChatPanel documentId={docId} language={language} />
+            {/* Chat Section */}
+            <div
+              className={`transition-all duration-300 bg-white rounded-lg border border-gray-200 overflow-hidden ${
+                panels.chat ? 'flex-1' : 'h-12'
+              }`}
+            >
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center">
+                <h3 className={`text-sm font-medium text-gray-700 flex-1 ${!panels.chat && 'invisible'}`}>
+                  Chat
+                </h3>
+                <button
+                  onClick={() => togglePanel('chat')}
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded p-1 transition-colors flex-shrink-0"
+                  title={panels.chat ? 'Zuklappen' : 'Aufklappen'}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+              {panels.chat && (
+                <div className="h-[calc(100%-44px)] overflow-hidden">
+                  <ChatPanel documentId={docId} language={language} />
+                </div>
+              )}
             </div>
           </div>
 
           {/* Right Column - PDF Viewer */}
-          {document?.pdf_url ? (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="bg-gray-100 px-4 py-2 border-b">
-                <h3 className="text-sm font-medium text-gray-700">
+          <div
+            className={`transition-all duration-300 overflow-hidden ${
+              panels.pdf ? 'flex-1 min-w-[250px]' : 'w-12'
+            }`}
+          >
+            <div className="bg-white rounded-lg border border-gray-200 h-full flex flex-col overflow-hidden">
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center justify-between">
+                <h3 className={`text-sm font-medium text-gray-700 ${!panels.pdf && 'sr-only'}`}>
                   PDF Dokument
-                  {document.page_count && (
-                    <span className="ml-2 text-gray-500">
+                  {document?.page_count && panels.pdf && (
+                    <span className="ml-2 text-gray-500 text-xs">
                       ({document.page_count} Seiten)
                     </span>
                   )}
                 </h3>
+                <button
+                  onClick={() => togglePanel('pdf')}
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded p-1 transition-colors"
+                  title={panels.pdf ? 'Zuklappen' : 'Aufklappen'}
+                >
+                  <svg className={`w-4 h-4 transition-transform ${!panels.pdf && 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
-              <div className="h-[calc(100%-44px)]">
-                <iframe
-                  src={document.pdf_url}
-                  className="w-full h-full"
-                  title="PDF Viewer"
-                />
-              </div>
+              {panels.pdf && (
+                document?.pdf_url ? (
+                  <div className="flex-1 overflow-hidden">
+                    <iframe
+                      src={document.pdf_url}
+                      className="w-full h-full"
+                      title="PDF Viewer"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-gray-400">
+                    <p className="text-sm">Kein PDF verfügbar</p>
+                  </div>
+                )
+              )}
             </div>
-          ) : (
-            <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
-              <p className="text-sm">Kein PDF verfügbar</p>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
