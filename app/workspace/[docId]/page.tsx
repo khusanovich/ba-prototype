@@ -104,7 +104,9 @@ export default function WorkspacePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Lade Workspace...</p>
+          <p className="mt-4 text-gray-600">
+            {language === "de" ? "Lade Workspace..." : "Loading workspace..."}
+          </p>
         </div>
       </div>
     );
@@ -119,7 +121,9 @@ export default function WorkspacePage() {
               <h1 className="text-xl font-semibold text-gray-900">
                 {document?.title}
               </h1>
-              <p className="text-sm text-gray-500">Lernassistent Workspace</p>
+              <p className="text-sm text-gray-500">
+                {language === "de" ? "Lernassistent Workspace" : "Learning Assistant Workspace"}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               {/* Language Switcher */}
@@ -153,7 +157,7 @@ export default function WorkspacePage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Neues Dokument
+                {language === "de" ? "Neues Dokument" : "New Document"}
               </button>
               <div className="relative">
                 <button
@@ -163,7 +167,7 @@ export default function WorkspacePage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
-                  Alle Dokumente
+                  {language === "de" ? "Alle Dokumente" : "All Documents"}
                   <svg className={`w-4 h-4 transition-transform ${showDocList ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -173,11 +177,13 @@ export default function WorkspacePage() {
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
                     <div className="p-3 border-b border-gray-200 bg-gray-50">
                       <p className="text-sm font-medium text-gray-700">
-                        Dokumente ({allDocuments.length})
+                        {language === "de" ? "Dokumente" : "Documents"} ({allDocuments.length})
                       </p>
                     </div>
                     {allDocuments.length === 0 ? (
-                      <p className="p-4 text-sm text-gray-500 text-center">Keine Dokumente</p>
+                      <p className="p-4 text-sm text-gray-500 text-center">
+                        {language === "de" ? "Keine Dokumente" : "No documents"}
+                      </p>
                     ) : (
                       <div className="p-2">
                         {allDocuments.map((doc) => (
@@ -199,13 +205,13 @@ export default function WorkspacePage() {
                               {doc.title}
                               {doc.id === docId && (
                                 <span className="ml-2 text-xs bg-indigo-600 text-white px-2 py-0.5 rounded">
-                                  Aktiv
+                                  {language === "de" ? "Aktiv" : "Active"}
                                 </span>
                               )}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
-                              {new Date(doc.created_at).toLocaleDateString("de-DE")}
-                              {doc.page_count && ` • ${doc.page_count} Seiten`}
+                              {new Date(doc.created_at).toLocaleDateString(language === "de" ? "de-DE" : "en-US")}
+                              {doc.page_count && ` • ${doc.page_count} ${language === "de" ? "Seiten" : "Pages"}`}
                             </p>
                           </button>
                         ))}
@@ -230,12 +236,12 @@ export default function WorkspacePage() {
             <div className="bg-white rounded-lg border border-gray-200 h-full flex flex-col">
               <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center justify-between">
                 <h3 className={`text-sm font-medium text-gray-700 ${!panels.summary && 'sr-only'}`}>
-                  Zusammenfassung
+                  {language === "de" ? "Zusammenfassung" : "Summary"}
                 </h3>
                 <button
                   onClick={() => togglePanel('summary')}
                   className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded p-1 transition-colors"
-                  title={panels.summary ? 'Zuklappen' : 'Aufklappen'}
+                  title={panels.summary ? (language === "de" ? "Zuklappen" : "Collapse") : (language === "de" ? "Aufklappen" : "Expand")}
                 >
                   <svg className={`w-4 h-4 transition-transform ${!panels.summary && 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -265,7 +271,7 @@ export default function WorkspacePage() {
                 <button
                   onClick={() => togglePanel('quiz')}
                   className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded p-1 transition-colors flex-shrink-0"
-                  title={panels.quiz ? 'Zuklappen' : 'Aufklappen'}
+                  title={panels.quiz ? (language === "de" ? "Zuklappen" : "Collapse") : (language === "de" ? "Aufklappen" : "Expand")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -292,7 +298,7 @@ export default function WorkspacePage() {
                 <button
                   onClick={() => togglePanel('chat')}
                   className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded p-1 transition-colors flex-shrink-0"
-                  title={panels.chat ? 'Zuklappen' : 'Aufklappen'}
+                  title={panels.chat ? (language === "de" ? "Zuklappen" : "Collapse") : (language === "de" ? "Aufklappen" : "Expand")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -316,17 +322,17 @@ export default function WorkspacePage() {
             <div className="bg-white rounded-lg border border-gray-200 h-full flex flex-col overflow-hidden">
               <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center justify-between">
                 <h3 className={`text-sm font-medium text-gray-700 ${!panels.pdf && 'sr-only'}`}>
-                  PDF Dokument
+                  {language === "de" ? "PDF Dokument" : "PDF Document"}
                   {document?.page_count && panels.pdf && (
                     <span className="ml-2 text-gray-500 text-xs">
-                      ({document.page_count} Seiten)
+                      ({document.page_count} {language === "de" ? "Seiten" : "Pages"})
                     </span>
                   )}
                 </h3>
                 <button
                   onClick={() => togglePanel('pdf')}
                   className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded p-1 transition-colors"
-                  title={panels.pdf ? 'Zuklappen' : 'Aufklappen'}
+                  title={panels.pdf ? (language === "de" ? "Zuklappen" : "Collapse") : (language === "de" ? "Aufklappen" : "Expand")}
                 >
                   <svg className={`w-4 h-4 transition-transform ${!panels.pdf && 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -344,7 +350,9 @@ export default function WorkspacePage() {
                   </div>
                 ) : (
                   <div className="flex-1 flex items-center justify-center text-gray-400">
-                    <p className="text-sm">Kein PDF verfügbar</p>
+                    <p className="text-sm">
+                      {language === "de" ? "Kein PDF verfügbar" : "No PDF available"}
+                    </p>
                   </div>
                 )
               )}
